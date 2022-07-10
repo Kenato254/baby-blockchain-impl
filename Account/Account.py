@@ -28,7 +28,9 @@ class Account:
     """
 
     account_id: bytes = b""
-    wallet: NDArray[Shape["2,0"], Structure["kPrv: Object, kPub: Object"]] | None = None
+    wallet: NDArray[
+        Shape["1,0"], Structure["kPrv: Object, kPub: Object, n_value: Object"]
+    ] | None = None
     balance: int = 0
 
     @classmethod
@@ -45,7 +47,7 @@ class Account:
         keys = KeyPair()
         kPrv, kPub = keys.gen_key_pair().values()
         acc_id = sha256(kPub[0].to_bytes(kPub[0].bit_length(), sys.byteorder)).digest()
-        
+
         struct = np.dtype([("PrivateKey", "O"), ("PublicKey", "O"), ("n_value", "O")])
         wallet = np.array([(kPrv[0], kPub[1], kPub[0])], dtype=struct)
         return self.__create_account(acc_id, wallet, self.balance)
@@ -103,6 +105,7 @@ class Account:
         a function for output key pair objects. It does not return anything.
         """
         pprint(asdict(acc))
+
 
 if __name__ == "__main__":
     account = Account()
