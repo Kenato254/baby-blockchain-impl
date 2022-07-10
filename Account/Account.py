@@ -29,7 +29,7 @@ class Account:
 
     account_id: bytes = b""
     wallet: NDArray[
-        Shape["1,0"], Structure["kPrv: Object, kPub: Object, n_value: Object"]
+        Shape["1,0"], Structure["PrivateKey: Object, PublicKey: Object, n_value: Object"]
     ] | None = None
     balance: int = 0
 
