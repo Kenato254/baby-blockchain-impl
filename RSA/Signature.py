@@ -17,7 +17,7 @@ class Signature:
         This for learning purposes. Can be updated to meet RFC3447 specs
         https://datatracker.ietf.org/doc/html/rfc3447#page-27
     """
-    __signature: bytes = field(default=None)
+    __signature: bytes = b""
 
     @property
     def get_signature(self):

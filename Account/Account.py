@@ -24,9 +24,9 @@ class Account:
 
     """
 
-    account_id: bytes = field(default_factory=b"")
-    wallet: list[bytes] = field(default_factory=[])
-    balance: int = field(default_factory=0)
+    account_id: bytes = b""
+    wallet: list[bytes] = []
+    balance: int = 0
 
     def gen_account(self) -> "Account":
         """
