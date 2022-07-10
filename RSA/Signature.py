@@ -25,7 +25,6 @@ class Signature:
 
     def sign_data(self, kPr: tuple[int, int], msg: bytes) -> bytes:
         """ Computes Digital Signature of a given message
-            RSASP1
         """
         d, n = kPr  # Unpack Private Key
         msg_hash = int.from_bytes(sha512(msg).digest(), sys.byteorder)
@@ -51,7 +50,6 @@ class Signature:
 
     def print_signature(self, **kwargs) -> None:
         print(self.to_string(**kwargs))
-
 
 if __name__ == "__main__":
     signer = Signature()

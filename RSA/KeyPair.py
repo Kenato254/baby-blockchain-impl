@@ -26,8 +26,8 @@ class KeyPair:
     """Simple RSA Algorithim to Compute KeyPair"""
 
     __private_key: tuple[D, N] | None = field(default=None, repr=False, init=False)
-    __large_primes: tuple[P, Q] | None  = field(default=None, repr=False, init=False)
-    public_key: tuple[N, E] | None  = field(default=None, repr=False, init=False)
+    __large_primes: tuple[P, Q] | None = field(default=None, repr=False, init=False)
+    public_key: tuple[N, E] | None = field(default=None, repr=False, init=False)
     key_bytes: Optional[int] = field(default=2048, repr=False)
 
     @classmethod
@@ -56,8 +56,8 @@ class KeyPair:
             Primes.add(rand_prime)
         self.__large_primes = tuple(Primes)
         return self.__large_primes
-    
-    def gen_key_pair(self) -> dict[str, tuple[int, int]]:
+
+    def gen_key_pair(self) -> dict[str, tuple[D, N] | tuple[N, E]]:
         """Generates keys which return an object of the KeyPair class"""
 
         # * Get Fairly large primes p & q
@@ -154,23 +154,23 @@ class KeyPair:
             return self.__format_key(*args, **kwargs)
 
     def print_key_pair(self, **kwargs) -> None:
-        """ Output the objects of the key pair.
+        """Output the objects of the key pair.
 
-            Private Key 
-            -----------
-            To print Public Key in DER-Format; Pass key="Private" to the method.
-                Example: print_key_pair(key="Private")
+        Private Key
+        -----------
+        To print Public Key in DER-Format; Pass key="Private" to the method.
+            Example: print_key_pair(key="Private")
 
-                To print Public Key in PEM-Format; Pass key="Private" and format="PEM" to the method.
-                    Example: print_key_pair(key="Private", format="PEM")
-            
-            Public Key 
-            ----------
-            Substitute "Private" with "Public" to achieve same output for Public Key.
+            To print Public Key in PEM-Format; Pass key="Private" and format="PEM" to the method.
+                Example: print_key_pair(key="Private", format="PEM")
 
-            KeyPair
-            -------
-            Pass no argument to output both "Private Key" and "Public Key" in "DER"'s format respectively.
+        Public Key
+        ----------
+        Substitute "Private" with "Public" to achieve same output for Public Key.
+
+        KeyPair
+        -------
+        Pass no argument to output both "Private Key" and "Public Key" in "DER"'s format respectively.
         """
 
         if not kwargs:
@@ -182,9 +182,9 @@ class KeyPair:
         else:
             print(self.to_string(**kwargs))
 
+
 if __name__ == "__main__":
     keypair = KeyPair(1024)
     pr, pub = keypair.gen_key_pair().values()
     keypair.print_key_pair(key="Public", format="PEM")
     # keypair.print_key_pair()
-
