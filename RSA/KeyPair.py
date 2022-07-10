@@ -170,9 +170,7 @@ class KeyPair:
 
             KeyPair
             -------
-            Pass no argument to output both "Private Key" and "Public Key" in "DER" formats respectively.
-
-
+            Pass no argument to output both "Private Key" and "Public Key" in "DER"'s format respectively.
         """
 
         if not kwargs:

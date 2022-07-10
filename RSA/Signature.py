@@ -3,7 +3,7 @@ import base64
 import pyasn1.codec.der.encoder
 import pyasn1.type.univ
 from hashlib import sha512
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 # ? Local Imports
 from RSA.KeyPair import KeyPair
@@ -17,7 +17,7 @@ class Signature:
         This for learning purposes. Can be updated to meet RFC3447 specs
         https://datatracker.ietf.org/doc/html/rfc3447#page-27
     """
-    __signature: bytes = None
+    __signature: bytes = field(default=None)
 
     @property
     def get_signature(self):
@@ -55,7 +55,7 @@ class Signature:
 
 if __name__ == "__main__":
     signer = Signature()
-    msg: bytes = b"Blockchain-Developer-Clases/baby-blockchain/baby-blockchain-impl/"
+    msg: bytes = b"Blockchain-Developer-Classes/baby-blockchain/baby-blockchain-impl/"
 
     privateKey, publicKey = GETKEYPAIR.gen_key_pair().values()
     signed_msg = signer.sign_data(privateKey, msg)
