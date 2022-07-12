@@ -85,8 +85,11 @@ class Account:
         self, recipient: "Account", amount: int, index: int
     ) -> Operation:
         """
-        a function that allows to create a payment operation on behalf of this account to the recipient. Accepts the
-        account object as input to which the payment will be made, the transfer amount and the key index in the wallet.
+        a function that allows to create a payment operation on behalf of this account to the recipient. 
+
+        :recipient: Account object as input to which the payment will be made.
+        :amount: the transfer amount.
+        :index: key index in the wallet.
         """
         # TODO: Needs Operation Class.
         ...
@@ -94,7 +97,9 @@ class Account:
     @property
     def get_balance(self) -> int:
         """
-        a function that allows to get the state of the user's balance. It returns an integer value.
+        a function that allows to get the state of the user's balance.
+
+        :return: None
         """
         return self.__balance
 
