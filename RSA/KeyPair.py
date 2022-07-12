@@ -4,6 +4,7 @@ import os
 import base64
 import pyasn1.codec.der.encoder
 import pyasn1.type.univ
+from pprint import pprint
 from dataclasses import dataclass, field, asdict
 from typing import Any, Generic, NewType, Optional
 
@@ -25,16 +26,15 @@ E = NewType("E", int)
 class KeyPair:
     """Simple RSA Algorithim to Compute KeyPair"""
 
-    __private_key: tuple[D, N] | None = field(default=None, repr=False, init=False)
-    __large_primes: tuple[P, Q] | None = field(default=None, repr=False, init=False)
-    public_key: tuple[N, E] | None = field(default=None, repr=False, init=False)
-    key_bytes: Optional[int] = field(default=2048, repr=False)
+    __private_key: tuple[D, N] | None = field(default=None)
+    __large_primes: tuple[P, Q] | None = field(default=None)
+    public_key: tuple[N, E] | None = field(default=None)
+    key_bytes: Optional[int] = field(default=2048)
 
     @classmethod
-    def __from_prv(cls, private_key) -> "KeyPair":
-        """TODO: To be implemented"""
-        pubKey = None
-        return cls(pubKey)
+    def from_existing(cls, kprv, p_q, kpub, k_bytes) -> "KeyPair":
+        """Returns a new object of KeyPair generated from Private Key"""
+        return cls(kprv, p_q, kpub, k_bytes)
 
     @property
     def get_primes(self) -> tuple[P, Q]:
@@ -57,7 +57,7 @@ class KeyPair:
         self.__large_primes = tuple(Primes)
         return self.__large_primes
 
-    def gen_key_pair(self) -> dict[str, tuple[D, N] | tuple[N, E]]:
+    def gen_key_pair(self, e: Prime = 65537) -> dict[str, tuple[D, N] | tuple[N, E]]:
         """Generates keys which return an object of the KeyPair class"""
 
         # * Get Fairly large primes p & q
@@ -72,7 +72,6 @@ class KeyPair:
         phi_of_n = np.multiply((p - 1), (q - 1), dtype="O")
 
         # * Kpub = e. From members of set {2, 3, ... phi(n  -1)} such that g.c.d(e, phi(n)) = 1
-        e: int = 65537
 
         while e < phi_of_n:
             if np.gcd(e, phi_of_n) == 1:  #
@@ -186,5 +185,19 @@ class KeyPair:
 if __name__ == "__main__":
     keypair = KeyPair(1024)
     pr, pub = keypair.gen_key_pair().values()
-    keypair.print_key_pair(key="Public", format="PEM")
+    # keypair.print_key_pair(key="Public", format="PEM")
     # keypair.print_key_pair()
+    # print(f"{keypair.get_primes =}")
+    # print("\n\n")
+    new_keys = keypair.gen_key_pair(e=pr[0])
+    # print(f"{keypair.get_primes =}")
+    # print("\n\n")
+    # pprint(new_keys)
+    # print(keypair.key_bytes)
+    keypair2 = keypair.from_existing(
+        new_keys["Kpr"],
+        keypair.get_primes,
+        new_keys["Kpub"],
+        keypair.key_bytes,
+    )
+    keypair2.print_key_pair(key="Private", format="PEM")
