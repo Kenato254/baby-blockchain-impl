@@ -14,6 +14,7 @@ from RSA.Signature import Signature
 # ? Digital Signature Class
 SIGNER = Signature()
 
+
 @dataclass
 class Account:
     """
@@ -70,7 +71,9 @@ class Account:
         a function that allows you to add a new key pair to the wallet and use it in the future to sign operations
         initiated from this account. It does not return anything.
         """
-        kPrv, kPub = keypair.gen_key_pair(self.wallet["PrivateKey"][0]).values() #! Generates New keypair from private key
+        kPrv, kPub = keypair.gen_key_pair(
+            self.wallet["PrivateKey"][0]
+        ).values()  #! Generates New keypair from private key
         data_struct = np.dtype(
             [("PrivateKey", "O"), ("PublicKey", "O"), ("n_value", "O")]
         )
@@ -98,23 +101,71 @@ class Account:
     @get_balance.setter
     def update_balance(self, value: int) -> None:
         """
-        a function that allows to update the state of the user's balance. It takes an integer value as input, and does
-        not return anything.
+        a function that allows to update the state of the user's balance. 
+        
+        :value: an integer input.
+        :return: None
         """
-        #TODO: Will need Transaction Class.
+        # TODO: Will need Transaction Class.
         ...
 
     @get_balance.getter
     def print_balance(self) -> None:
         """
-        a function that allows to display the state of the user's balance. It does not return anything.
+        a function that allows to display the state of the user's balance. 
+
+        :return: None
         """
         print(f"Account balance: {self.__balance}")
+
+    @property
+    def get_assets(self):
+        """
+        a function that allows to get the state of the user's balance. 
+        
+        :return: None
+        """
+        return self.assets
+
+    @get_assets.setter
+    def update_assets(
+        self,
+        asset: NDArray[
+            Shape["1,0"],
+            Structure[
+                "DigitalDeed: Str, location: Str, worth: UInt64, description: Str"
+            ],
+        ],
+    ) -> None:
+        """
+        a function that allows to update the state of the user's assets.
+        
+        :asset: An Array consisting of information of a property.
+        :return: None
+        """
+        ...
+
+    @get_assets.getter
+    def print_assets(self) -> None:
+        """
+        a function that allows to display the state of the user's assets.
+
+        :return: None
+        """
+        pprint(f"""
+        Deed: {self.assets['digitalDeed']}
+        Location: {self.assets['location']}
+        Worth: {self.assets['worth']}
+        Description: {self.assets['description']}
+        """
+        )
 
     def sign_data(self, msg: bytes, idx: int) -> bytes:
         """
         a function that allows the user to sign random data. It accepts a message and an index of the key pair in the
-        wallet as input. Returns the value of the signature
+        wallet as input. 
+
+        :return: bytes -> The value of the signature
         """
         d, n = self.wallet["PrivateKey"][idx], self.wallet["n_value"][idx]
         signed_data = SIGNER.sign_data((d, n), msg)
@@ -122,7 +173,9 @@ class Account:
 
     def to_string(self) -> str:
         """
-        a function that allows to form a string with an account object. Returns an object of the String class.
+        a function that allows to form a string with an account object. 
+
+        :return: an object of the String class.
         """
         return f"""
         account_id: {self.account_id!r}\n
@@ -130,12 +183,15 @@ class Account:
         balance: {self.__balance!r}\n
         wallet: {self.wallet!r}
         """
-    
+
     def print(self) -> None:
         """
-        a function for output key pair objects. It does not return anything.
+        a function for output key pair objects. 
+
+        :return: None
         """
         pprint(self.wallet)
+
 
 if __name__ == "__main__":
     account = Account()
@@ -146,3 +202,4 @@ if __name__ == "__main__":
     # print(acc.to_string())
     # acc.to_string()
     # acc.print()
+    acc.print_assets()
