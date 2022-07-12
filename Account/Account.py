@@ -85,6 +85,7 @@ class Account:
         a function that allows to create a payment operation on behalf of this account to the recipient. Accepts the
         account object as input to which the payment will be made, the transfer amount and the key index in the wallet.
         """
+        # TODO: Will need Operation Class.
         ...
 
     @property
@@ -100,6 +101,7 @@ class Account:
         a function that allows to update the state of the user's balance. It takes an integer value as input, and does
         not return anything.
         """
+        #TODO: Will need Transaction Class.
         ...
 
     @get_balance.getter
