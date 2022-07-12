@@ -18,7 +18,7 @@
 ## System Content (System Boundaries)
 - Here is a simple illustration of the transfer of ownership of an asset.
 ![realblockchain-image](img/real-blockchain.png)
-- In this transaction, if Bob has met code's law requirements, he will surely have Alice's assets transferred to him, and Alice, on the other hand, will end up with Bob's digital money for the exchange.
+- In this transaction, if Bob meets code's law, he will surely have Alice's assets transferred to him, and Alice, on the other hand, will end up with Bob's digital money for the exchange.
 - However, if Bob fails to meet the code's law requirements, the transaction will not happen, and everybody's assets will remain as they were before the initialization of the transaction. 
 
 ## Interaction(Potential) of the product (with other products and components)
