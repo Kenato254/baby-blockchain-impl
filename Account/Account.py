@@ -88,7 +88,7 @@ class Account:
         a function that allows to create a payment operation on behalf of this account to the recipient. Accepts the
         account object as input to which the payment will be made, the transfer amount and the key index in the wallet.
         """
-        # TODO: Will need Operation Class.
+        # TODO: Needs Operation Class.
         ...
 
     @property
@@ -106,7 +106,7 @@ class Account:
         :value: an integer input.
         :return: None
         """
-        # TODO: Will need Transaction Class.
+        # TODO: Needs Transaction Class.
         ...
 
     @get_balance.getter
@@ -122,7 +122,7 @@ class Account:
     def get_assets(self):
         """
         a function that allows to get the state of the user's balance. 
-        
+
         :return: None
         """
         return self.assets
@@ -143,6 +143,7 @@ class Account:
         :asset: An Array consisting of information of a property.
         :return: None
         """
+        # TODO: Needs Transaction Class.
         ...
 
     @get_assets.getter
