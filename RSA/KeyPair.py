@@ -29,7 +29,7 @@ class KeyPair:
     __private_key: tuple[D, N] | None = field(default=None)
     __large_primes: tuple[P, Q] | None = field(default=None)
     public_key: tuple[N, E] | None = field(default=None)
-    key_bytes: Optional[int] = field(default=2048)
+    key_bytes: Optional[int] = field(default=1024)
 
     @classmethod
     def from_existing(cls, kprv, p_q, kpub, k_bytes) -> "KeyPair":

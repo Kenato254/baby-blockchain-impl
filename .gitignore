@@ -8,6 +8,7 @@ __pycache__/
 C_Python
 private-key.pem
 publickey.pem
+img/real-blockchain.png:Zone.Identifier
 
 # Distribution / packaging
 .Python

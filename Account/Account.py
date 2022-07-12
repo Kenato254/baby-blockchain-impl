@@ -14,7 +14,6 @@ from RSA.Signature import Signature
 # ? Digital Signature Class
 SIGNER = Signature()
 
-
 @dataclass
 class Account:
     """
