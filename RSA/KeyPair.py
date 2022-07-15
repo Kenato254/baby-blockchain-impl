@@ -26,9 +26,9 @@ Modulus = NewType("Modulus", int)
 class KeyPair:
     """Simple RSA Algorithim to Compute KeyPair"""
 
-    __private_key: tuple[PrivateExponent, Modulus] | None = field(default=None)
-    __large_primes: tuple[Prime1, Prime2] | None = field(default=None)
-    public_key: tuple[Modulus, PublicExponent] | None = field(default=None)
+    __private_key: tuple[PrivateExponent, Modulus] = ()
+    __large_primes: tuple[Prime1, Prime2] = ()
+    public_key: tuple[Modulus, PublicExponent] = ()
     key_bytes: Optional[int] = field(default=1024)
 
     @classmethod
