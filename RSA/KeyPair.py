@@ -15,20 +15,20 @@ from Crypto.Math.Numbers import Integer
 
 # * Typing class for Prime Number
 Prime = NewType("Prime", int)
-P = NewType("P", Prime)
-Q = NewType("Q", Prime)
-D = NewType("D", int)
-N = NewType("N", int)
-E = NewType("E", int)
+Prime1 = NewType("Prime1", Prime)
+Prime2 = NewType("Prime2", Prime)
+PrivateExponent = NewType("PrivateExponent", int)
+PublicExponent = NewType("PublicExponent", int)
+Modulus = NewType("Modulus", int)
 
 
 @dataclass
 class KeyPair:
     """Simple RSA Algorithim to Compute KeyPair"""
 
-    __private_key: tuple[D, N] | None = field(default=None)
-    __large_primes: tuple[P, Q] | None = field(default=None)
-    public_key: tuple[N, E] | None = field(default=None)
+    __private_key: tuple[PrivateExponent, Modulus] | None = field(default=None)
+    __large_primes: tuple[Prime1, Prime2] | None = field(default=None)
+    public_key: tuple[Modulus, PublicExponent] | None = field(default=None)
     key_bytes: Optional[int] = field(default=1024)
 
     @classmethod
@@ -37,14 +37,11 @@ class KeyPair:
         return cls(kprv, p_q, kpub, k_bytes)
 
     @property
-    def get_primes(self) -> tuple[P, Q]:
-        return self.__large_primes
-
-    @property
-    def get_private_key(self) -> tuple[D, N]:
+    def get_private_key(self) -> tuple[PrivateExponent, Modulus]:
         return self.__private_key
 
-    def __get_p_q(self) -> None:
+    @property
+    def get_primes(self) -> tuple[Prime1, Prime2]:
         """
         Generates primes p & q: for automation purposes.
         Using third party package pycryptodome with optimize Primality Tests
@@ -57,11 +54,13 @@ class KeyPair:
         self.__large_primes = tuple(Primes)
         return self.__large_primes
 
-    def gen_key_pair(self, e: Prime = 65537) -> dict[str, tuple[D, N] | tuple[N, E]]:
+    def gen_key_pair(
+        self, e: PublicExponent = 65537
+    ) -> dict[str, tuple[PrivateExponent, Modulus] | tuple[Modulus, PublicExponent]]:
         """Generates keys which return an object of the KeyPair class"""
 
         # * Get Fairly large primes p & q
-        temp1, temp2 = self.__get_p_q()  # * Fairly size key
+        temp1, temp2 = self.get_primes  # * Fairly size key
         p, q = np.array(temp1, dtype="O"), np.array(temp2, dtype="O")
         del temp1, temp2
 
