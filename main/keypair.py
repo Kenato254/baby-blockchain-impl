@@ -57,7 +57,17 @@ class KeyPair:
     def gen_key_pair(
         self, e: PublicExponent = 65537
     ) -> dict[str, tuple[PrivateExponent, Modulus] | tuple[Modulus, PublicExponent]]:
-        """Generates keys which return an object of the KeyPair class"""
+        """
+        Generates keys which return an object of the KeyPair class
+
+        :str:
+            Key for accessing private or public key.
+            
+            :Kpr:
+                Private key access key-value
+            :Kpub:
+                Public key access key-value
+        """
 
         # * Get Fairly large primes p & q
         temp1, temp2 = self.get_primes  # * Fairly size key

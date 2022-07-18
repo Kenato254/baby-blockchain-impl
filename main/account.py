@@ -7,10 +7,9 @@ from dataclasses import dataclass, field, asdict
 
 from nptyping import NDArray, Int, Shape, Structure
 
-sys.path.append("../")
-from Operation import Operation
-from RSA.KeyPair import KeyPair
-from RSA.Signature import Signature
+from keypair import KeyPair
+from signature import Signature
+# from operation import Operation
 
 # ? Digital Signature Class
 SIGNER = Signature()
@@ -46,7 +45,7 @@ class Account:
 
     @classmethod
     def __create_account(cls, id, wall, balance) -> "Account":
-        """Return a new instance of Account"""
+        """Return a new object of Account"""
         return cls(id, wall, balance)
 
     def gen_account(self) -> "Account":
@@ -67,7 +66,7 @@ class Account:
             [("PrivateKey", "O"), ("PublicKey", "O"), ("n_value", "O")]
         )
         wallet = np.array([(kPrv[0], kPub[1], kPub[0])], dtype=data_struct)
-        return self.__create_account(acc_id, wallet, 0)
+        return self.__create_account(acc_id, wallet, self.get_balance)
 
     def add_key_pair_to_wallet(self, keypair: KeyPair) -> None:
         """
@@ -86,13 +85,16 @@ class Account:
 
     def create_payment_op(
         self, recipient: "Account", amount: int, index: int
-    ) -> Operation:
+    ) -> None:
         """
         a function that allows to create a payment operation on behalf of this account to the recipient.
 
-        :recipient: Account object as input to which the payment will be made.
-        :amount: the transfer amount.
-        :index: key index in the wallet.
+        :recipient: 
+            Account object as input to which the payment will be made.
+        :amount: 
+            the transfer amount.
+        :index: 
+            key index in the wallet.
         """
         # TODO: Needs Operation Class.
         ...
@@ -209,12 +211,19 @@ class Account:
         else:
             raise ValueError("You have no assets available.")
 
-    def sign_data(self, msg: bytes, idx: int) -> bytes:
+    def sign_data(self, msg: bytes, idx: int=1) -> bytes:
         """
-        a function that allows the user to sign random data. It accepts a message and an index of the key pair in the
-        wallet as input.
+        a function that allows the user to sign random data. 
+        
+        :msg:
+            It accepts a message 
+        
+        idx: 
+            an index of the key pair in the wallet as input.
+            default = 1(KeyPair generated to signing data)
 
-        :return: bytes -> The value of the signature
+        :return: 
+            bytes -> The value of the signature
         """
         d, n = self.wallet["PrivateKey"][idx], self.wallet["n_value"][idx]
         signed_data = SIGNER.sign_data((d, n), msg)

@@ -6,7 +6,7 @@ from hashlib import sha512
 from dataclasses import dataclass, field
 
 # ? Local Imports
-from RSA.KeyPair import KeyPair
+from keypair import KeyPair
 
 GETKEYPAIR = KeyPair(1024)
 
@@ -28,14 +28,14 @@ class Signature:
         """
         d, n = kPr  # Unpack Private Key
         msg_hash = int.from_bytes(sha512(msg).digest(), sys.byteorder)
-        temp = pow(msg_hash, d, n)
+        temp = pow(msg_hash, d, n)  
         self.__signature = temp.to_bytes(temp.bit_length(), sys.byteorder)
         return self.__signature
 
-    def verify_signature(self, msg, signed_msg: bytes, kPub: tuple[int, int]) -> bool:
+    def verify_signature(self, msg, sig: bytes, kPub: tuple[int, int]) -> bool:
         n, e = kPub  # Unpack Public Key
         msg_hash = int.from_bytes(sha512(msg).digest(), sys.byteorder)
-        unsign_msg = pow(int.from_bytes(signed_msg, sys.byteorder), e, n)
+        unsign_msg = pow(int.from_bytes(sig, sys.byteorder), e, n)
         return msg_hash == unsign_msg
 
     def to_string(self, **kwargs):
