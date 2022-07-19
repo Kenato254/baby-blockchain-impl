@@ -62,7 +62,7 @@ class KeyPair:
 
         :str:
             Key for accessing private or public key.
-            
+
             :Kpr:
                 Private key access key-value
             :Kpub:

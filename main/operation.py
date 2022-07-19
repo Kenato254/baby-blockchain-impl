@@ -71,12 +71,16 @@ class Operation:
              true/false depending on the results of checking the operation.
         """
         if op.amount < op.sender.get_balance:
-            op_codes: str = "{0} {1} DUP SHA256 {2} EQUALVERIFY CHECKSIG".format(
-                op.signature.hex(), 
-                op.sender.wallet["PublicKey"][1], 
-                op.sender.get_account_id
+            op_codes: str = "{0} {1} DUP SHA256 {2} EQUALVERIFY {3} CHECKSIG".format(
+                op.signature.hex(),
+                op.sender.wallet["PublicKey"][1],
+                op.sender.get_account_id,
+                op.sender.wallet["Modulus"][1],
             )
-            script: object = Script(op_codes)
+
+            script: object = Script(
+                op_codes, op.amount.to_bytes(op.amount.bit_length(), "little")
+            )
             return script.eval()
         return False
 

@@ -65,10 +65,9 @@ class Account:
         # Get KeyPair
         keys = KeyPair()
         kPrv, kPub = keys.gen_key_pair().values()
-        acc_id = (
-            sha256(kPub[1].to_bytes(kPub[1].bit_length(), sys.byteorder))
-            .hexdigest()
-        )
+        acc_id = sha256(
+            kPub[1].to_bytes(kPub[1].bit_length(), sys.byteorder)
+        ).hexdigest()
 
         data_struct = np.dtype(
             [("PrivateKey", "O"), ("PublicKey", "O"), ("Modulus", "O")]
@@ -94,10 +93,9 @@ class Account:
             [("PrivateKey", "O"), ("PublicKey", "O"), ("Modulus", "O")]
         )
         # ? Updates account id with the new publickey
-        self.__account_id = (
-            sha256(kPub[1].to_bytes(kPub[1].bit_length(), sys.byteorder))
-            .hexdigest()
-        )
+        self.__account_id = sha256(
+            kPub[1].to_bytes(kPub[1].bit_length(), sys.byteorder)
+        ).hexdigest()
 
         temp = np.array([(kPrv[0], kPub[1], kPub[0])], dtype=data_struct)
         self.wallet = np.append(self.wallet, temp)
