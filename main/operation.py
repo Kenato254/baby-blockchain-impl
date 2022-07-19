@@ -2,6 +2,7 @@ import sys
 from typing import TypeVar
 from dataclasses import dataclass
 from pprint import pprint
+from base64 import b64encode
 
 from account import Account
 from keypair import KeyPair
@@ -70,14 +71,14 @@ class Operation:
              true/false depending on the results of checking the operation.
         """
         if op.amount < op.sender.get_balance:
-            op_codes: str = "{0} {1} OP_DUP OP_SHA256 OP_EQUALVERIFY OP_CHECKSIG".format(
-                op.signature.hex(), op.sender.wallet["PublicKey"][1]
+            op_codes: str = "{0} {1} DUP SHA256 {2} EQUALVERIFY CHECKSIG".format(
+                op.signature.hex(), 
+                op.sender.wallet["PublicKey"][1], 
+                op.sender.get_account_id
             )
-
             script: object = Script(op_codes)
             return script.eval()
         return False
-
 
     def to_string(self) -> str:
         """
@@ -104,7 +105,7 @@ class Operation:
 
 
 if __name__ == "__main__":
-    sender = Account(1000)
+    sender = Account()
     receiver = Account()
     acc_sender = sender.gen_account()
     acc_sender.add_key_pair_to_wallet(KeyPair())

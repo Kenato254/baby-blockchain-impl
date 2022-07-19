@@ -2,11 +2,10 @@ import sys
 import unittest
 from hashlib import sha256
 
-sys.path.append("../")
-from main.keypair import KeyPair
-from main.signature import Signature
+from keypair import KeyPair
+from signature import Signature
 
-from main.script import DataNode, DUP, SHA256, EQUALVERIFY, CHECKSIG
+from script import DataNode, DUP, SHA256, EQUALVERIFY, CHECKSIG
 
 KEYS = KeyPair()
 SIGNER = Signature()

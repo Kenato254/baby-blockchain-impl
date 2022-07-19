@@ -9,6 +9,7 @@ from nptyping import NDArray, Int, Shape, Structure
 
 from keypair import KeyPair
 from signature import Signature
+
 # from operation import Operation
 
 # ? Digital Signature Class
@@ -30,18 +31,23 @@ class Account:
 
     """
 
-    account_id: str = b""
+    __account_id: bytes = b""
     wallet: NDArray[
         Shape["1,0"],
-        Structure["PrivateKey: Object, PublicKey: Object, n_value: Object"],
+        Structure["PrivateKey: Object, PublicKey: Object, Modulus: Object"],
     ] | None = None
-    __balance: int = 0
+    __balance: int = 1000  #!!!!!!!!!!!!
     __assets: NDArray[
         Shape["1,0"],
         Structure[
             "digital_deed: Object, appro_area: Object, worth: Object, owner: Object"
         ],
     ] | None = None
+
+    @property
+    def get_account_id(self) -> bytes:
+        """Returns account's id"""
+        return self.__account_id
 
     @classmethod
     def __create_account(cls, id, wall, balance) -> "Account":
@@ -50,20 +56,22 @@ class Account:
 
     def gen_account(self) -> "Account":
         """
-        a function that allows you to create an account. It returns an object of the Account class.
-        The first key pair is generated and assigned to the account.
+        a function that allows you to create an account.
+                The first key pair is generated and assigned to the account.
+
+        :returns:
+             an object of the Account class.
         """
         # Get KeyPair
         keys = KeyPair()
         kPrv, kPub = keys.gen_key_pair().values()
         acc_id = (
-            sha256(kPub[0].to_bytes(kPub[0].bit_length(), sys.byteorder))
+            sha256(kPub[1].to_bytes(kPub[1].bit_length(), sys.byteorder))
             .hexdigest()
-            .encode("ascii")
         )
 
         data_struct = np.dtype(
-            [("PrivateKey", "O"), ("PublicKey", "O"), ("n_value", "O")]
+            [("PrivateKey", "O"), ("PublicKey", "O"), ("Modulus", "O")]
         )
         wallet = np.array([(kPrv[0], kPub[1], kPub[0])], dtype=data_struct)
         return self.__create_account(acc_id, wallet, self.get_balance)
@@ -71,29 +79,38 @@ class Account:
     def add_key_pair_to_wallet(self, keypair: KeyPair) -> None:
         """
         a function that allows you to add a new key pair to the wallet and use it in the future to sign operations
-        initiated from this account. It does not return anything.
+        initiated from this account.
+
+        :keypair:
+            object of KeyPair class
+
+        :return:
+            None.
         """
         kPrv, kPub = keypair.gen_key_pair(
             self.wallet["PrivateKey"][0]
         ).values()  #! Generates New keypair from private key
         data_struct = np.dtype(
-            [("PrivateKey", "O"), ("PublicKey", "O"), ("n_value", "O")]
+            [("PrivateKey", "O"), ("PublicKey", "O"), ("Modulus", "O")]
+        )
+        # ? Updates account id with the new publickey
+        self.__account_id = (
+            sha256(kPub[1].to_bytes(kPub[1].bit_length(), sys.byteorder))
+            .hexdigest()
         )
 
         temp = np.array([(kPrv[0], kPub[1], kPub[0])], dtype=data_struct)
         self.wallet = np.append(self.wallet, temp)
 
-    def create_payment_op(
-        self, recipient: "Account", amount: int, index: int
-    ) -> None:
+    def create_payment_op(self, recipient: "Account", amount: int, index: int) -> None:
         """
         a function that allows to create a payment operation on behalf of this account to the recipient.
 
-        :recipient: 
+        :recipient:
             Account object as input to which the payment will be made.
-        :amount: 
+        :amount:
             the transfer amount.
-        :index: 
+        :index:
             key index in the wallet.
         """
         # TODO: Needs Operation Class.
@@ -151,12 +168,12 @@ class Account:
                     b64encode(deed_no).hex(),
                     b64encode(appro_area).hex(),
                     b64encode(worth).hex(),
-                    self.account_id,
+                    self.get_account_id,
                 )
             ],
             dtype=data_struct,
         )
-        
+
         if self.__assets is not None:
             self.update_assets = temp
         self.__assets = temp
@@ -186,7 +203,7 @@ class Account:
         :asset: An Array consisting of information of a property.
         :return: None
         """
-        if self.account_id == asset["owner"][0]:
+        if self.get_account_id == asset["owner"][0]:
             if self.__assets is None:
                 self.__assets = asset
             else:
@@ -211,21 +228,21 @@ class Account:
         else:
             raise ValueError("You have no assets available.")
 
-    def sign_data(self, msg: bytes, idx: int=1) -> bytes:
+    def sign_data(self, msg: bytes, idx: int = 1) -> bytes:
         """
-        a function that allows the user to sign random data. 
-        
+        a function that allows the user to sign random data.
+
         :msg:
-            It accepts a message 
-        
-        idx: 
+            It accepts a message
+
+        idx:
             an index of the key pair in the wallet as input.
             default = 1(KeyPair generated to signing data)
 
-        :return: 
+        :return:
             bytes -> The value of the signature
         """
-        d, n = self.wallet["PrivateKey"][idx], self.wallet["n_value"][idx]
+        d, n = self.wallet["PrivateKey"][idx], self.wallet["Modulus"][idx]
         signed_data = SIGNER.sign_data((d, n), msg)
         return signed_data
 
@@ -236,7 +253,7 @@ class Account:
         :return: an object of the String class.
         """
         return f"""
-        account_id: {self.account_id!r}\n
+        account_id: {self.get_account_id!r}\n
         assets: {self.assets!r}\n
         balance: {self.__balance!r}\n
         wallet: {self.wallet!r}
@@ -254,7 +271,9 @@ class Account:
 if __name__ == "__main__":
     account = Account()
     acc = account.gen_account()
+    # print(acc.get_account_id)
     acc.add_key_pair_to_wallet(KeyPair())
+    # print(acc.get_account_id)
     randata: bytes = b"some random data to be signed."
 
     #! https://upload.wikimedia.org/wikipedia/commons/8/80/Example_of_a_blank_Kenyan_Deed_Title.png
@@ -263,5 +282,5 @@ if __name__ == "__main__":
     # acc.sign_data(randata, 1)
     # print(acc.to_string())
     # acc.to_string()
-    # acc.print()
-    acc.print_assets
+    acc.print()
+    # acc.print_assets

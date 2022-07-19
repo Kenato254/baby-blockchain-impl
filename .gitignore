@@ -8,9 +8,6 @@ __pycache__/
 C_Python
 private-key.pem
 publickey.pem
-Account/
-RSA/
-test/test_keypair.py
 img/real-blockchain.png:Zone.Identifier
 
 # Distribution / packaging
