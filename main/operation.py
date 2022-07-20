@@ -1,15 +1,15 @@
 import sys
+import json
 from typing import TypeVar
 from dataclasses import dataclass
 from pprint import pprint
 from base64 import b64encode
+from binascii import unhexlify
 
-from account import Account
-from keypair import KeyPair
 from script import Script
 
 
-@dataclass
+@dataclass(repr=False)
 class Operation:
     """
     :sender:
@@ -28,8 +28,8 @@ class Operation:
         a stack of operations
     """
 
-    sender: Account | None = None
-    receiver: Account | None = None
+    sender: object | None = None
+    receiver: object | None = None
     amount: int = 0
     signature: bytes = b""
 
@@ -38,9 +38,7 @@ class Operation:
         """Return a new object of Operation"""
         return cls(s, r, a, sig)
 
-    def create_operation(
-        self, sender: Account, recpt: Account, amt: int
-    ) -> "Operation":
+    def create_operation(self, sender: object, recpt: object, amt: int) -> "Operation":
         """
         a function that allows to create an operation with all the necessary details and signature.
 
@@ -60,7 +58,7 @@ class Operation:
         sig: bytes = sender.sign_data(amt.to_bytes(amt.bit_length(), "little"), 1)
         return self.__create_operation_helper(sender, recpt, amt, sig)
 
-    def verify_operation(self, op: "Operation") -> bool:
+    def verify_operation(self) -> bool:
         """
         a function that checks the operation. The main checks (relevant for the proposed implementation) include:
 
@@ -70,16 +68,17 @@ class Operation:
         :returns:
              true/false depending on the results of checking the operation.
         """
-        if op.amount < op.sender.get_balance:
-            op_codes: str = "{0} {1} DUP SHA256 {2} EQUALVERIFY {3} CHECKSIG".format(
-                op.signature.hex(),
-                op.sender.wallet["PublicKey"][1],
-                op.sender.get_account_id,
-                op.sender.wallet["Modulus"][1],
+        if self.amount < self.sender.get_balance:
+            op_codes: str = "{0} {1} DUP SHA256 {2} EQUALVERIFY CHECKSIG".format(
+                self.signature.hex(),
+                str((self.sender.wallet["Modulus"][1], self.sender.wallet["PublicKey"][1]))
+                .encode("ascii")
+                .hex(),
+                self.sender.get_account_id,
             )
 
             script: object = Script(
-                op_codes, op.amount.to_bytes(op.amount.bit_length(), "little")
+                op_codes, self.amount.to_bytes(self.amount.bit_length(), "little")
             )
             return script.eval()
         return False
@@ -91,12 +90,7 @@ class Operation:
         :returns:
              an object of the String class.
         """
-        return f"""
-        Sender: {self.sender!r}\n
-        Receiver: {self.receiver!r}\n
-        Amount: {self.amount!r}\n
-        Signature: {self.signature!r}
-        """
+        return f"Sender: {self.sender.get_account_id}\nReceiver: {self.receiver.get_account_id}\nAmount: {self.amount!r}\nSignature: {self.signature.hex().strip('0')!r}"
 
     def print_operation(self) -> None:
         """
@@ -107,8 +101,10 @@ class Operation:
         """
         pprint(self.to_string())
 
-
 if __name__ == "__main__":
+    from keypair import KeyPair
+    from account import Account
+
     sender = Account()
     receiver = Account()
     acc_sender = sender.gen_account()
@@ -117,8 +113,8 @@ if __name__ == "__main__":
     acc_receiver = sender.gen_account()
     acc_receiver.add_key_pair_to_wallet(KeyPair())
 
-    # print(acc_sender)
-    # print(acc_receiver)
+    # print(acc_sender.to_string())
+    # print(acc_receiver.to_string())
     # acc_sender.print()
     # acc_receiver.print()
 
@@ -130,4 +126,6 @@ if __name__ == "__main__":
     # pprint(operation.amount)
     # pprint(operation.signature)
     # operation.print_operation()
-    print(operation.verify_operation(operation))
+    # print(operation.verify_operation())
+    # print(operation.to_string())
+    # print(operation)

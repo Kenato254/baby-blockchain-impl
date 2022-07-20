@@ -13,6 +13,8 @@ SIGNER = Signature()
 
 
 class DataNode:
+    """A node operand used in operations"""
+
     def __init__(self, data: Any) -> None:
         self.data = data
 
@@ -20,7 +22,7 @@ class DataNode:
         if isinstance(self.data, int):
             return self.data.bit_length()
 
-    def eval(self):
+    def eval(self) -> Any:
         return self.data
 
 
@@ -46,14 +48,8 @@ class SHA256:
     def __init__(self, data: Any) -> None:
         self.data = data
 
-    def eval(self):
-        return (
-            sha256(
-                self.data.eval().to_bytes(self.data.eval().bit_length(), sys.byteorder)
-            )
-            .hexdigest()
-            .encode("ascii")
-        )
+    def eval(self) -> bytes:
+        return sha256(unhexlify(self.data.eval())).hexdigest().encode("ascii")
 
 
 class EQUALVERIFY:
@@ -66,7 +62,7 @@ class EQUALVERIFY:
         self.data = data
         self.data2 = data2
 
-    def eval(self):
+    def eval(self) -> Any:
         return self.data.eval() == self.data2.eval()
 
 
@@ -76,15 +72,14 @@ class CHECKSIG:
         Single Signature verification.
     """
 
-    def __init__(self, msg, mod: int, pubK: int, sig: bytes) -> None:
+    def __init__(self, msg, pubK: int, sig: bytes) -> None:
         self.msg = msg
         self.pubK = pubK
-        self.mod = mod
         self.sig = sig
 
-    def eval(self):
+    def eval(self) -> bool:
         return SIGNER.verify_signature(
-            self.msg.eval(), self.sig.eval(), (self.mod.eval(), self.pubK.eval())
+            self.msg.eval(), self.sig.eval(), eval(unhexlify(self.pubK.eval()))
         )
 
 
@@ -142,7 +137,7 @@ class Script:
         """
         return self.stack[self.pointer]
 
-    def eval(self) -> int:
+    def eval(self) -> bool:
         self.push(DataNode(unhexlify(self.op_codes[0])))
 
         for op in self.op_codes[1:]:
@@ -163,10 +158,9 @@ class Script:
                     return False
 
             elif op == self.OP_CHECKSIG:
-                modulus = self.pop()
                 kPub = self.pop()
                 sig = self.pop()
-                result = CHECKSIG(DataNode(self.amt), modulus, kPub, sig)
+                result = CHECKSIG(DataNode(self.amt), kPub, sig)
                 return result.eval()
 
             else:
@@ -175,10 +169,7 @@ class Script:
                 except:
                     temp = op.encode("ascii")
                 self.push(DataNode(temp))
-
-    def __repr__(self) -> str:
-        return f"Operations {self.stack!r}"
-
+        return False
 
 if __name__ == "__main__":
     script = Script
