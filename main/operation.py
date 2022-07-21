@@ -1,7 +1,7 @@
 import sys
 import json
 from typing import TypeVar
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 from pprint import pprint
 from base64 import b64encode
 from binascii import unhexlify
@@ -128,4 +128,4 @@ if __name__ == "__main__":
     # operation.print_operation()
     # print(operation.verify_operation())
     # print(operation.to_string())
-    # print(operation)
+    print(asdict(operation))

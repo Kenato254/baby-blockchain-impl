@@ -57,7 +57,6 @@ class Transaction:
         function that allows to form a string from transaction objects.
         Returns an object of the String class.
         """
-        print("Shit")
         return f"Trasaction Id: {self.transaction_id!r}\nOperation: {self.set_of_operations!r}\nNonce: {self.nonce!r}"
 
     def print_transaction(self) -> None:
@@ -92,7 +91,8 @@ if __name__ == "__main__":
 
         tx = temp.create_operation([], 0)
         tx = temp.create_operation(sender_op, RANDNONCE)
-        print(tx.to_string())
+        # print(tx.to_string())
         # print(tx.transaction_id)
         # print(tx.nonce)
         # operation.print_operation()
+        print(sender_op)
