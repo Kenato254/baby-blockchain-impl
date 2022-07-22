@@ -48,7 +48,6 @@ class Account:
         Shape["1,0"],
         Structure["PrivateKey: Object, PublicKey: Object, Modulus: Object"],
     ] | None = None
-    # __balance: int = 1000  #!!!!!!!!!!!! Temporary
     __properties: NDArray[
         Shape["1,0"],
         Structure[
