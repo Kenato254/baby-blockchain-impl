@@ -1,4 +1,5 @@
 from binascii import unhexlify
+import struct
 import sys
 from copy import copy
 from hashlib import sha256
@@ -107,11 +108,15 @@ class Script:
     OP_EQUALVERIFY = "EQUALVERIFY"
     OP_CHECKSIG = "CHECKSIG"
 
-    def __init__(self, op_codes: Any, amt: int) -> None:
+    def __init__(self, op_codes: Any, amt: int|float) -> None:
         self.stack = []
         self.pointer = -1
         self.op_codes = op_codes.split(" ")
-        self.amt = amt
+        
+        if isinstance(amt, int):
+            self.amt = amt.to_bytes(self.amt.bit_length(), "little")
+        else:
+            self.amt = struct.pack("f", amt)
 
     def push(self, data) -> None:
         """

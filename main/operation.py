@@ -1,7 +1,7 @@
 import sys
 import json
-from typing import TypeVar
-from dataclasses import dataclass, asdict
+import struct
+from dataclasses import dataclass
 from pprint import pprint
 from base64 import b64encode
 from binascii import unhexlify
@@ -38,7 +38,7 @@ class Operation:
         """Return a new object of Operation"""
         return cls(s, r, a, sig)
 
-    def create_operation(self, sender: object, recpt: object, amt: int) -> "Operation":
+    def create_operation(self, sender: object, recpt: object, amt: int|float) -> "Operation":
         """
         a function that allows to create an operation with all the necessary details and signature.
 
@@ -55,10 +55,14 @@ class Operation:
         :return:
             Operation object.
         """
-        sig: bytes = sender.sign_data(amt.to_bytes(amt.bit_length(), "little"), 1)
+        sig: bytes = None
+        if isinstance(amt, int):
+            sig = sender.sign_data(amt.to_bytes(amt.bit_length(), "little"), 1)
+        else:
+            sig = sender.sign_data(struct.pack("f", amt))
         return self.__create_operation_helper(sender, recpt, amt, sig)
 
-    def verify_operation(self) -> bool:
+    def verify_operation(self, index: int) -> bool:
         """
         a function that checks the operation. The main checks (relevant for the proposed implementation) include:
 
@@ -71,14 +75,19 @@ class Operation:
         if self.amount < self.sender.get_balance:
             op_codes: str = "{0} {1} DUP SHA256 {2} EQUALVERIFY CHECKSIG".format(
                 self.signature.hex(),
-                str((self.sender.wallet["Modulus"][1], self.sender.wallet["PublicKey"][1]))
+                str(
+                    (
+                        self.sender.wallet["Modulus"][index],
+                        self.sender.wallet["PublicKey"][index],
+                    )
+                )
                 .encode("ascii")
                 .hex(),
                 self.sender.get_account_id,
             )
 
             script: object = Script(
-                op_codes, self.amount.to_bytes(self.amount.bit_length(), "little")
+                op_codes, self.amount
             )
             return script.eval()
         return False
@@ -90,7 +99,7 @@ class Operation:
         :returns:
              an object of the String class.
         """
-        return f"Sender: {self.sender.get_account_id}\nReceiver: {self.receiver.get_account_id}\nAmount: {self.amount!r}\nSignature: {self.signature.hex().strip('0')!r}"
+        return json.dumps(self.get_operation_list, indent=1)
 
     def print_operation(self) -> None:
         """
@@ -99,7 +108,18 @@ class Operation:
         :return:
             none.
         """
-        pprint(self.to_string())
+        print(self.to_string())
+
+    @property
+    def get_operation_list(self) -> list[dict]:
+        return [
+            {
+                "sender": self.sender.get_account_id,
+                "receiver": self.receiver.get_account_id,
+                "amount": self.amount,
+                "sig": self.signature.hex().strip("0"),
+            }
+        ]
 
 if __name__ == "__main__":
     from keypair import KeyPair
@@ -128,4 +148,5 @@ if __name__ == "__main__":
     # operation.print_operation()
     # print(operation.verify_operation())
     # print(operation.to_string())
-    print(asdict(operation))
+    # pprint(operation.get_operation_list)
+    operation.print_operation()
