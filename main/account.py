@@ -48,7 +48,7 @@ class Account:
         Shape["1,0"],
         Structure["PrivateKey: Object, PublicKey: Object, Modulus: Object"],
     ] | None = None
-    __balance: int = 1000  #!!!!!!!!!!!! Temporary
+    # __balance: int = 1000  #!!!!!!!!!!!! Temporary
     __properties: NDArray[
         Shape["1,0"],
         Structure[
@@ -79,9 +79,9 @@ class Account:
         return self.__account_id
 
     @classmethod
-    def __create_account(cls, id, wall, balance) -> "Account":
+    def __create_account(cls, id, wall) -> "Account":
         """Return a new object of Account"""
-        return cls(id, wall, balance)
+        return cls(id, wall)
 
     def gen_account(self) -> "Account":
         """
@@ -99,7 +99,7 @@ class Account:
             [("PrivateKey", "O"), ("PublicKey", "O"), ("Modulus", "O")]
         )
         wallet = np.array([(kPrv[0], kPub[1], kPub[0])], dtype=data_struct)
-        return self.__create_account(acc_id, wallet, self.get_balance)
+        return self.__create_account(acc_id, wallet)
 
     def add_key_pair_to_wallet(self, keypair: KeyPair) -> None:
         """
