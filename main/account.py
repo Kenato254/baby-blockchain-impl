@@ -1,5 +1,4 @@
 # ? Built-in
-from mimetypes import init
 import os
 import sys
 import json
@@ -49,7 +48,7 @@ class Account:
         Shape["1,0"],
         Structure["PrivateKey: Object, PublicKey: Object, Modulus: Object"],
     ] | None = None
-    __balance: int = 1000  #!!!!!!!!!!!!
+    __balance: int = 1000  #!!!!!!!!!!!! Temporary
     __properties: NDArray[
         Shape["1,0"],
         Structure[
@@ -189,19 +188,6 @@ class Account:
         else:
             raise BaseException(f"Invalid coin {coin}!")
         return tx
-
-    @get_balance.setter
-    def __update_balance(self, value: int) -> None:
-        """
-        a function that allows to update the state of the user's balance.
-
-        :value:
-            an integer input.
-
-        :return:
-            None
-        """
-        self.__balance = value
 
     @get_balance.getter
     def print_balance(self) -> None:
