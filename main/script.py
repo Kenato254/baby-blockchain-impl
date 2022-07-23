@@ -108,15 +108,21 @@ class Script:
     OP_EQUALVERIFY = "EQUALVERIFY"
     OP_CHECKSIG = "CHECKSIG"
 
-    def __init__(self, op_codes: Any, amt: int|float) -> None:
+    def __init__(self, op_codes: Any, amt: int|float|str|bytes) -> None:
         self.stack = []
         self.pointer = -1
         self.op_codes = op_codes.split(" ")
         
         if isinstance(amt, int):
             self.amt = amt.to_bytes(self.amt.bit_length(), "little")
-        else:
+        elif isinstance(amt, float):
             self.amt = struct.pack("f", amt)
+        elif isinstance(amt, str):
+            self.amt = amt.encode("ascii")
+        elif isinstance(amt, bytes):
+            self.amt = amt
+        else:
+            raise BaseException("Invalid {amt} input!")
 
     def push(self, data) -> None:
         """

@@ -25,3 +25,8 @@ class AccountTest(unittest.TestCase):
 
         self.assertEqual(self.user1.get_balance, 50000-150.50)
         self.assertEqual(self.user2.get_balance, 50000+150.50)
+
+    def test_payment_of_more_than_availble(self):
+        with self.assertRaises(BaseException):
+            self.user1.create_payment_op(self.user2, 1000000000, 1)
+

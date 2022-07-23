@@ -227,6 +227,9 @@ class Account:
             buyer.update_properties
             # Update seller's properties
             self.update_properties
+        
+        #TODO: WORK ON PROGRESS!!
+
 
     def create_property(self, deed_no: bytes, appro_area: bytes, worth: int) -> None:
         """
@@ -418,7 +421,7 @@ if __name__ == "__main__":
     receiver = account2.gen_account()
     receiver.add_key_pair_to_wallet(KeyPair())
     # receiver.add_key_pair_to_wallet(KeyPair())
-    # sender.create_payment_op(receiver, 9000, 1)
+    # sender.create_payment_op(receiver, 900000, 1)
     # sender.create_payment_op(receiver, 40.99, 1)
     # sender.create_payment_op(receiver, 20, 1)
     # sender.create_payment_op(receiver, 60, 1)
