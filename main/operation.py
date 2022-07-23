@@ -30,7 +30,7 @@ class Operation:
 
     sender: object | None = None
     receiver: object | None = None
-    asset: int|float|str|bytes = 0
+    asset: int | float | str | bytes = 0
     signature: bytes = b""
 
     @classmethod
@@ -38,7 +38,9 @@ class Operation:
         """Return a new object of Operation"""
         return cls(s, r, a, sig)
 
-    def create_operation(self, sender: object, recpt: object, asset: int|float|str|bytes) -> "Operation":
+    def create_operation(
+        self, sender: object, recpt: object, asset: int | float | str | bytes
+    ) -> "Operation":
         """
         a function that allows to create an operation with all the necessary details and signature.
 
@@ -57,20 +59,24 @@ class Operation:
         """
         sig: bytes = None
         if isinstance(asset, int):
-            sig = sender.sign_data(asset.to_bytes(asset.bit_length(), "little"), 1) # signs integer: coins
+            sig = sender.sign_data(
+                asset.to_bytes(asset.bit_length(), "little"), 1
+            )  # signs integer: coins
 
         elif isinstance(asset, float):
-            sig = sender.sign_data(struct.pack("f", asset)) # signs float: coins
+            sig = sender.sign_data(struct.pack("f", asset))  # signs float: coins
 
         elif isinstance(asset, bytes) or isinstance(asset, str):
             try:
-                sig = sender.sign_data(asset.encode("ascii")) # signs string: property's id
+                sig = sender.sign_data(
+                    asset.encode("ascii")
+                )  # signs string: property's id
             except AttributeError:
-                sig = sender.sign_data(asset) # signs bytes: property's id
+                sig = sender.sign_data(asset)  # signs bytes: property's id
 
         return self.__create_operation_helper(sender, recpt, asset, sig)
 
-    def verify_operation(self, index: int=1, prop: bool=False) -> bool:
+    def verify_operation(self, index: int = 1, prop: bool = False) -> bool:
         """
         a function that checks the operation. The main checks (relevant for the proposed implementation) include:
 
@@ -98,16 +104,14 @@ class Operation:
             .hex(),
             self.sender.get_account_id,
         )
+        script: object = None
         if prop and self.asset in self.sender.get_properties["digital_deed"]:
-            # print(self.sender.get_properties["digital_deed"])
-            print(self.asset)
-            exit()
-        if self.asset < self.sender.get_balance: 
-            script: object = Script(
-                op_codes, self.asset
-            )
+            script:object = Script(op_codes, self.asset)
             return script.eval()
-        return False
+
+        if self.asset < self.sender.get_balance:
+            script:object = Script(op_codes, self.asset)
+            return script.eval()
 
     def to_string(self) -> str:
         """
@@ -137,6 +141,7 @@ class Operation:
                 "sig": self.signature.hex().strip("0"),
             }
         ]
+
 
 if __name__ == "__main__":
     from keypair import KeyPair
