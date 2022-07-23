@@ -105,13 +105,14 @@ class Operation:
             self.sender.get_account_id,
         )
         script: object = None
-        if prop and self.asset in self.sender.get_properties["digital_deed"]:
+        if prop and self.asset in self.sender.get_properties["digital_deed"]: # Propoerty exist check
             script:object = Script(op_codes, self.asset)
             return script.eval()
 
-        if self.asset < self.sender.get_balance:
+        if self.asset < self.sender.get_balance: # Coins are sufficient check
             script:object = Script(op_codes, self.asset)
             return script.eval()
+        return False
 
     def to_string(self) -> str:
         """
