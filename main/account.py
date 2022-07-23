@@ -4,7 +4,8 @@ import sys
 import json
 import numpy as np
 from typing import Any
-from base64 import b64encode, b16decode
+from binascii import hexlify, unhexlify
+from base64 import b64encode, b64decode
 from hashlib import sha256, sha512
 from pprint import pprint
 from dataclasses import dataclass, field, asdict
@@ -64,9 +65,9 @@ class Account:
         temp_utxo = [
             {
                 "sender": None,
-                "receiver": self.get_account_id, # id from firstly generated keys
+                "receiver": self.get_account_id,  # id from firstly generated keys
                 "amount": 50000.00,
-                "sig": None, 
+                "sig": None,
             }
         ]
         tx = TX.create_operation(temp_utxo, RANDNONCE)
@@ -154,7 +155,7 @@ class Account:
             )
 
     @property
-    def get_balance(self) -> int|float:
+    def get_balance(self) -> int | float:
         """
         a function that allows to get the state of the user's balance.
 
@@ -198,9 +199,38 @@ class Account:
         """
         print(f"Account balance: {self.get_balance}")
 
+    def payment_op_for_property(
+        self, prop_id: bytes, buyer: "Account", amount: int | float
+    ) -> None:
+        """
+        a function that allows to create a payment operation on behalf of this account to the recipient.
+
+        :prop_id:
+            a digital deed that uniquely identifies a property.
+
+        :buyer:
+            Account object as input to which the property ownership will be transfered.
+
+        :amount:
+            the transfer amount which must be equal to property's worth.
+
+        :return:
+            Trasaction object.
+        """
+        # Create operation for and seller
+        seller_op: Operation = OP.create_operation(self, buyer, prop_id)
+
+        if seller_op.verify_operation(prop=True): # verify property of interest
+            # Initiate coin transaction
+            self.create_payment_op(buyer, self, amount)
+            # Update buyer's properties
+            buyer.update_properties
+            # Update seller's properties
+            self.update_properties
+
     def create_property(self, deed_no: bytes, appro_area: bytes, worth: int) -> None:
         """
-        a function creates a new propertys.
+        a function creates a new property.
 
         :deed_no:
             a deed number that will be turned into a digital deed. It designates ownership of a property
@@ -225,18 +255,16 @@ class Account:
         temp = np.array(
             [
                 (
-                    b64encode(deed_no).hex(),
-                    b64encode(appro_area).hex(),
-                    b64encode(worth).hex(),
+                    hexlify(b64encode(deed_no)),
+                    hexlify(b64encode(appro_area)),
+                    hexlify(b64encode(worth)),
                     self.get_account_id,
                 )
             ],
             dtype=data_struct,
         )
 
-        if self.__properties is not None:
-            self.update_properties = temp
-        self.__properties = temp
+        self.update_properties = temp
 
     @property
     def get_properties(self):
@@ -268,6 +296,7 @@ class Account:
             None
         """
         if self.get_account_id == property_["owner"][0]:
+
             if self.__properties is None:
                 self.__properties = property_
             else:
@@ -276,7 +305,7 @@ class Account:
     @get_properties.getter
     def print_properties(self) -> None:
         """
-        a function that allows to display the state of the user's property_s.
+        a function that allows to display the state of the user's propertys.
 
         :return:
             None
@@ -390,7 +419,7 @@ if __name__ == "__main__":
     receiver.add_key_pair_to_wallet(KeyPair())
     # receiver.add_key_pair_to_wallet(KeyPair())
     # sender.create_payment_op(receiver, 9000, 1)
-    sender.create_payment_op(receiver, 40.99, 1)
+    # sender.create_payment_op(receiver, 40.99, 1)
     # sender.create_payment_op(receiver, 20, 1)
     # sender.create_payment_op(receiver, 60, 1)
     # receiver.create_payment_op(sender, 10, 1)
@@ -409,5 +438,14 @@ if __name__ == "__main__":
     # print(receiver.get_account_id)
     # print(sender.get_history)
     # print(sender.get_account_id)
-    print(sender.get_balance)
+    # print(sender.get_balance)
     # print(receiver.get_balance)
+    # print(sender.get_properties)
+    sender.print_properties
+    cost = int(b64decode(unhexlify(b"4d5441774d4441774d413d3d")))
+
+    sender.payment_op_for_property(
+        b"5330464b535546455479394d5430394551564a4a515573764e546335",
+        receiver,
+        cost
+    )
