@@ -7,7 +7,7 @@ import numpy as np
 from typing import Any
 from binascii import hexlify, unhexlify
 from base64 import b64encode, b64decode
-from hashlib import sha256, sha512
+from hashlib import sha256
 from pprint import pprint
 from dataclasses import dataclass, field, asdict
 
@@ -67,7 +67,7 @@ class Account:
             {
                 "sender": None,
                 "receiver": self.get_account_id,  # id from firstly generated keys
-                "amount": 50000.00,
+                "amount": 5000000.00,
                 "sig": None,
             }
         ]
@@ -247,13 +247,14 @@ class Account:
         sig: bytes = self.sign_data(prop_id, index)
         seller_op: Operation = OP.create_operation(self, buyer, prop_id, sig)
 
-        if seller_op.verify_operation(index, True): # verify property of interest
+        if seller_op.verify_operation(index, True): # verify property of interest exist
             # Initiate coin transaction
             buyer.create_payment_op(self, amount, index)
             # Update buyer's properties
             buyer.update_properties
             # Update seller's properties
             self.update_properties
+            print(self.get_properties)
         
         #TODO: WORK ON PROGRESS!!
 
@@ -436,8 +437,8 @@ if __name__ == "__main__":
     # print(sender.get_account_id)
 
     #! https://upload.wikimedia.org/wikipedia/commons/8/80/Example_of_a_blank_Kenyan_Deed_Title.png
-    sender.create_property(b"KAJIADO/LOODARIAK/579", b"104.0 hectares", b"1000000")
-    sender.create_property(b"KAJIADO/LOODARIAK/579", b"80.0 hectares", b"1000000")
+    sender.create_property(b"KAJIADO/LOODARIAK/579", b"104.0 hectares", b"1000")
+    sender.create_property(b"KAJIADO/LOODARIAK/580", b"80.0 hectares", b"800")
     # # print(sender.to_string())
     # sender.to_string()
     # sender.print()

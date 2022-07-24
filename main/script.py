@@ -114,7 +114,7 @@ class Script:
         self.op_codes = op_codes.split(" ")
         
         if isinstance(amt, int):
-            self.amt = amt.to_bytes(self.amt.bit_length(), "little")
+            self.amt = amt.to_bytes(amt.bit_length(), "little")
         elif isinstance(amt, float):
             self.amt = struct.pack("f", amt)
         elif isinstance(amt, str):
