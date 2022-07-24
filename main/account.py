@@ -50,12 +50,9 @@ class Account:
         Shape["1,0"],
         Structure["PrivateKey: Object, PublicKey: Object, Modulus: Object"],
     ] | None = None
-    __properties: NDArray[
-        Shape["1,0"],
-        Structure[
-            "digital_deed: Object, appro_area: Object, worth: Object, owner: Object"
-        ],
-    ] | None = None
+
+    __properties: dict = None
+
     __tx_history: NDArray[
         Shape["2,2"], Structure["UTXO: Object, STXO: Object"]
     ] | None = field(default=None, init=False)
@@ -67,7 +64,7 @@ class Account:
             {
                 "sender": None,
                 "receiver": self.get_account_id,  # id from firstly generated keys
-                "amount": 5000000.00,
+                "asset": 5000000.00,
                 "sig": None,
             }
         ]
@@ -124,7 +121,9 @@ class Account:
         temp = np.array([(kPrv[0], kPub[1], kPub[0])], dtype=data_struct)
         self.wallet = np.append(self.wallet, temp)  # Add new keys to the wallet
 
-    def create_payment_op(self, recipient: "Account", asset: int | float | str | bytes, index: int) -> None:
+    def create_payment_op(
+        self, recipient: "Account", asset: int | float | str | bytes, index: int
+    ) -> None:
         """
         a function that allows to create a payment operation on behalf of this account to the recipient.
 
@@ -140,7 +139,7 @@ class Account:
         :return:
             Trasaction object.
         """
-        sig: bytes = b"" # Sign asset
+        sig: bytes = b""  # Sign asset
         if isinstance(asset, int):
             sig = self.sign_data(
                 asset.to_bytes(asset.bit_length(), "little"), index
@@ -152,8 +151,7 @@ class Account:
         elif isinstance(asset, bytes) or isinstance(asset, str):
             try:
                 sig = self.sign_data(
-                    asset.encode("ascii"), 
-                    index
+                    asset.encode("ascii"), index
                 )  # signs string: property's id
             except AttributeError:
                 sig = self.sign_data(asset, index)  # signs bytes: property's id
@@ -200,14 +198,14 @@ class Account:
 
             for u in range(len(unspent)):
                 if unspent[u] is not None:
-                    tx += unspent[u][0]["operation"][0]["amount"]
+                    tx += unspent[u][0]["operation"][0]["asset"]
 
         elif coin == "STXO":  # Calculate Spent
             spent: list = list(self.get_history["STXO"])
 
             for s in range(len(spent)):
                 if spent[s] is not None:
-                    tx += spent[s][0]["operation"][0]["amount"]
+                    tx += spent[s][0]["operation"][0]["asset"]
         else:
             raise BaseException(f"Invalid coin {coin}!")
         return tx
@@ -222,8 +220,35 @@ class Account:
         """
         print(f"Account balance: {self.get_balance}")
 
+    def create_property(self, deed_no: bytes, appro_area: bytes, worth: int) -> None:
+        """
+        a function creates a new property.
+
+        :deed_no:
+            a deed number that will be turned into a digital deed. It designates ownership of a property
+
+        :appro_area:
+            approximate area of the property/land
+
+        :worth:
+            cost of the property
+
+        :owner:
+            account_id of the current owner
+        """
+
+        property_: dict[bytes, dict[str, bytes]] = {
+            hexlify(b64encode(deed_no)): {
+                "appro_area": hexlify(b64encode(appro_area)),
+                "worth": hexlify(b64encode(worth)),
+                "owner": self.get_account_id,
+            }
+        }
+
+        self.update_properties = property_
+
     def payment_op_for_property(
-        self, prop_id: bytes, buyer: "Account", amount: int|float | float, index: int
+        self, prop_id: bytes, buyer: "Account", amount: int | float | float, index: int
     ) -> None:
         """
         a function that allows to create a payment operation on behalf of this account to the recipient.
@@ -247,55 +272,18 @@ class Account:
         sig: bytes = self.sign_data(prop_id, index)
         seller_op: Operation = OP.create_operation(self, buyer, prop_id, sig)
 
-        if seller_op.verify_operation(index, True): # verify property of interest exist
+        if seller_op.verify_operation(index, True):  # verify property of interest exist
             # Initiate coin transaction
             buyer.create_payment_op(self, amount, index)
             # Update buyer's properties
-            buyer.update_properties
+            # buyer.update_properties
             # Update seller's properties
-            self.update_properties
-            print(self.get_properties)
-        
-        #TODO: WORK ON PROGRESS!!
+            # self.update_properties
+            # print(self.get_properties)
+            tx: Transaction = TX.create_operation(seller_op.get_operation_list, RANDNONCE)
+            # pprint(tx.get_trasaction_list)
 
-
-    def create_property(self, deed_no: bytes, appro_area: bytes, worth: int) -> None:
-        """
-        a function creates a new property.
-
-        :deed_no:
-            a deed number that will be turned into a digital deed. It designates ownership of a property
-
-        :appro_area:
-            approximate area of the property/land
-
-        :worth:
-            cost of the property
-
-        :owner:
-            account_id of the current owner
-        """
-        data_struct = np.dtype(
-            [
-                ("digital_deed", "O"),
-                ("appro_area", "O"),
-                ("worth", "O"),
-                ("owner", "O"),
-            ]
-        )
-        temp = np.array(
-            [
-                (
-                    hexlify(b64encode(deed_no)),
-                    hexlify(b64encode(appro_area)),
-                    hexlify(b64encode(worth)),
-                    self.get_account_id,
-                )
-            ],
-            dtype=data_struct,
-        )
-
-        self.update_properties = temp
+        # TODO: WORK ON PROGRESS!!
 
     @property
     def get_properties(self):
@@ -308,30 +296,20 @@ class Account:
         return self.__properties
 
     @get_properties.setter
-    def update_properties(
-        self,
-        property_: NDArray[
-            Shape["1,0"],
-            Structure[
-                "digital_deed: Object, appro_area: Object, worth: Object, owner: Object"
-            ],
-        ],
-    ) -> None:
+    def update_properties(self, property_: dict[bytes, dict[str, bytes]]) -> None:
         """
         a function that allows to update the state of the user's properties.
 
         :property_:
-            An Array consisting of information of a new property.
+            A dictionary consisting of information of a new property.
 
         :return:
             None
         """
-        if self.get_account_id == property_["owner"][0]:
-
-            if self.__properties is None:
-                self.__properties = property_
-            else:
-                self.__properties = np.append(self.__properties, property_)
+        if self.__properties is None:
+            self.__properties = property_
+        else:
+            self.__properties.update(property_)
 
     @get_properties.getter
     def print_properties(self) -> None:
@@ -342,27 +320,25 @@ class Account:
             None
         """
         if self.get_properties is not None:
-            print(
-                f"Deed: {self.get_properties['digital_deed']}\nApproximate Area: {self.get_properties['appro_area']}\nWorth: {self.get_properties['worth']}\nowner: {self.get_properties['owner'][0]}"
-            )
+            print(self.get_properties)
         else:
             raise ValueError("You have no propertiess available.")
 
-    def sign_data(self, msg: bytes, idx: int = 1) -> bytes:
+    def sign_data(self, msg: bytes, index: int = 1) -> bytes:
         """
         a function that allows the user to sign random data.
 
         :msg:
             It accepts a message
 
-        idx:
+        :index:
             an index of the key pair in the wallet as input.
             default = 1(KeyPair generated to signing data)
 
         :return:
             bytes -> The value of the signature
         """
-        d, n = self.wallet["PrivateKey"][idx], self.wallet["Modulus"][idx]
+        d, n = self.wallet["PrivateKey"][index], self.wallet["Modulus"][index]
         signed_data = SIGNER.sign_data((d, n), msg)
         return signed_data
 
@@ -390,7 +366,7 @@ class Account:
 
     def print_tx_history(self, tx: str | None = None) -> None:
         """
-        function print transaction history
+        function prints transaction history
 
         :tx:
             transaction type.
@@ -449,35 +425,31 @@ if __name__ == "__main__":
     receiver = account2.gen_account()
     receiver.add_key_pair_to_wallet(KeyPair())
     # receiver.add_key_pair_to_wallet(KeyPair())
-    # sender.create_payment_op(receiver, 900000, 1)
+    sender.create_payment_op(receiver, 900000, 1)
     # sender.create_payment_op(receiver, 40.99, 1)
     # sender.create_payment_op(receiver, 20, 1)
     # sender.create_payment_op(receiver, 60, 1)
     # receiver.create_payment_op(sender, 10, 1)
     # receiver.create_payment_op(sender, 5, 1)
     # print(sender.get_balance)
-    # sender.print_tx_history("UTXO")
-    # sender.print_tx_history("STXO")
+    sender.print_tx_history("UTXO")
+    sender.print_tx_history("STXO")
     # sender.print_tx_history()
     # print()
     # receiver.print_tx_history("UTXO")
     # receiver.print_tx_history("STXO")
     # receiver.print_tx_history()
-    # sender.compute_balance()
-    # receiver.compute_balance()
     # print(sender.get_account_id)
     # print(receiver.get_account_id)
     # print(sender.get_history)
     # print(sender.get_account_id)
-    # print(sender.get_balance)
+    print(sender.get_balance)
     # print(receiver.get_balance)
     # print(sender.get_properties)
-    sender.print_properties
+    # sender.print_properties
     cost = int(b64decode(unhexlify(b"4d5441774d4441774d413d3d")))
 
     sender.payment_op_for_property(
-        b"5330464b535546455479394d5430394551564a4a515573764e546335",
-        receiver,
-        cost,
-        1
+        b"5330464b535546455479394d5430394551564a4a515573764e546335", receiver, cost, 1
     )
+    # sender.print_properties

@@ -2,7 +2,6 @@ import json
 from dataclasses import dataclass
 from pprint import pprint
 from base64 import b64encode
-from binascii import hexlify, unhexlify
 
 from script import Script
 
@@ -74,7 +73,7 @@ class Operation:
         :returns:
              true/false depending on the results of checking the operation
         """
-        print(self.signature.hex()==hexlify(self.signature), end="\n\n")
+
         op_codes: str = "{0} {1} DUP SHA256 {2} EQUALVERIFY CHECKSIG".format(
             self.signature.hex(),
             str(
@@ -88,7 +87,8 @@ class Operation:
             self.sender.get_account_id,
         )
         script: object = None
-        if prop and self.asset in self.sender.get_properties["digital_deed"]: # Property exist check
+
+        if prop and self.sender.get_properties.get(self.asset, False): # Property exist check
             script:object = Script(op_codes, self.asset)
             return script.eval()
 
@@ -121,30 +121,30 @@ class Operation:
             {
                 "sender": self.sender.get_account_id,
                 "receiver": self.receiver.get_account_id,
-                "amount": self.asset,
+                "asset": self.asset,
                 "sig": self.signature.hex().strip("0"),
             }
         ]
 
 
 if __name__ == "__main__":
-    # from keypair import KeyPair
-    # from account import Account
+    from keypair import KeyPair
+    from account import Account
 
-    # sender = Account()
-    # receiver = Account()
-    # acc_sender = sender.gen_account()
-    # acc_sender.add_key_pair_to_wallet(KeyPair())
-
-    # acc_receiver = sender.gen_account()
-    # acc_receiver.add_key_pair_to_wallet(KeyPair())
+    sender = Account()
+    acc_sender = sender.gen_account()
+    acc_sender.add_key_pair_to_wallet(KeyPair())
+    
+    receiver = Account()
+    acc_receiver = sender.gen_account()
+    acc_receiver.add_key_pair_to_wallet(KeyPair())
 
     # print(acc_sender.to_string())
     # print(acc_receiver.to_string())
     # acc_sender.print()
     # acc_receiver.print()
 
-    # op = Operation()
+    op = Operation()
     # operation = op.create_operation(acc_sender, acc_receiver, 100)
     # print(operation, sep="\n")
     # pprint(operation.sender)

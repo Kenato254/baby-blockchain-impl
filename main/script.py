@@ -1,11 +1,10 @@
-from binascii import unhexlify
 import struct
-import sys
-from copy import copy
-from hashlib import sha256
 from typing import Any
+from copy import copy
 from pprint import pprint
+from hashlib import sha256
 from base64 import b64encode
+from binascii import unhexlify
 
 
 from signature import Signature
@@ -108,11 +107,11 @@ class Script:
     OP_EQUALVERIFY = "EQUALVERIFY"
     OP_CHECKSIG = "CHECKSIG"
 
-    def __init__(self, op_codes: Any, amt: int|float|str|bytes) -> None:
+    def __init__(self, op_codes: Any, amt: int | float | str | bytes) -> None:
         self.stack = []
         self.pointer = -1
         self.op_codes = op_codes.split(" ")
-        
+
         if isinstance(amt, int):
             self.amt = amt.to_bytes(amt.bit_length(), "little")
         elif isinstance(amt, float):
@@ -181,6 +180,7 @@ class Script:
                     temp = op.encode("ascii")
                 self.push(DataNode(temp))
         return False
+
 
 if __name__ == "__main__":
     script = Script
