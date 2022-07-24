@@ -39,7 +39,7 @@ class Operation:
         return cls(s, r, a, sig)
 
     def create_operation(
-        self, sender: object, recpt: object, asset: int | float | str | bytes
+        self, sender: object, recpt: object, asset: int | float | str | bytes, sig: bytes
     ) -> "Operation":
         """
         a function that allows to create an operation with all the necessary details and signature.
@@ -48,6 +48,7 @@ class Operation:
             account of the sender
         :recpt:
             account of recipient
+
         :asset:
             could be amount to transfer or property to transfer
 
@@ -57,23 +58,6 @@ class Operation:
         :return:
             Operation object.
         """
-        sig: bytes = None
-        if isinstance(asset, int):
-            sig = sender.sign_data(
-                asset.to_bytes(asset.bit_length(), "little"), 1
-            )  # signs integer: coins
-
-        elif isinstance(asset, float):
-            sig = sender.sign_data(struct.pack("f", asset))  # signs float: coins
-
-        elif isinstance(asset, bytes) or isinstance(asset, str):
-            try:
-                sig = sender.sign_data(
-                    asset.encode("ascii")
-                )  # signs string: property's id
-            except AttributeError:
-                sig = sender.sign_data(asset)  # signs bytes: property's id
-
         return self.__create_operation_helper(sender, recpt, asset, sig)
 
     def verify_operation(self, index: int = 1, prop: bool = False) -> bool:

@@ -2,6 +2,7 @@
 import os
 import sys
 import json
+import struct
 import numpy as np
 from typing import Any
 from binascii import hexlify, unhexlify
@@ -123,23 +124,42 @@ class Account:
         temp = np.array([(kPrv[0], kPub[1], kPub[0])], dtype=data_struct)
         self.wallet = np.append(self.wallet, temp)  # Add new keys to the wallet
 
-    def create_payment_op(self, recipient: "Account", amount: int, index: int) -> None:
+    def create_payment_op(self, recipient: "Account", asset: int | float | str | bytes, index: int) -> None:
         """
         a function that allows to create a payment operation on behalf of this account to the recipient.
 
         :recipient:
             Account object as input to which the payment will be made.
-        :amount:
-            the transfer amount.
+
+        :asset:
+            could be amount to transfer or property to transfer
 
         :return:
             Trasaction object.
         """
+        sig: bytes = b"" # Sign asset
+        if isinstance(asset, int):
+            sig = self.sign_data(
+                asset.to_bytes(asset.bit_length(), "little"), index
+            )  # signs integer: coins
+
+        elif isinstance(asset, float):
+            sig = self.sign_data(struct.pack("f", asset), index)  # signs float: coins
+
+        elif isinstance(asset, bytes) or isinstance(asset, str):
+            try:
+                sig = self.sign_data(
+                    asset.encode("ascii"), 
+                    index
+                )  # signs string: property's id
+            except AttributeError:
+                sig = self.sign_data(asset, index)  # signs bytes: property's id
+
         # Create Operation from Operation Class
-        operation = OP.create_operation(self, recipient, amount)
+        operation = OP.create_operation(self, recipient, asset, sig)
 
         # Verify Operation
-        if operation.verify_operation(index):
+        if operation.verify_operation():
             op: list[Operation] = operation.get_operation_list
             transaction = TX.create_operation(
                 op, RANDNONCE
@@ -151,7 +171,7 @@ class Account:
 
         else:
             raise BaseException(
-                f"Payment of {amount} to {recipient.get_account_id} from {self.get_account_id} failed!!"
+                f"Transfer of {asset} to {recipient.get_account_id} from {self.get_account_id} failed!!"
             )
 
     @property
