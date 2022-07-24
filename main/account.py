@@ -159,7 +159,7 @@ class Account:
         operation = OP.create_operation(self, recipient, asset, sig)
 
         # Verify Operation
-        if operation.verify_operation():
+        if operation.verify_operation(index):
             op: list[Operation] = operation.get_operation_list
             transaction = TX.create_operation(
                 op, RANDNONCE

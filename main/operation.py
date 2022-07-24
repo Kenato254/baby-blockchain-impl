@@ -60,7 +60,7 @@ class Operation:
         """
         return self.__create_operation_helper(sender, recpt, asset, sig)
 
-    def verify_operation(self, index: int = 1, prop: bool = False) -> bool:
+    def verify_operation(self, index: int, prop: bool = False) -> bool:
         """
         a function that checks the operation. The main checks (relevant for the proposed implementation) include:
 
