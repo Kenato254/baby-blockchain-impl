@@ -134,6 +134,9 @@ class Account:
         :asset:
             could be amount to transfer or property to transfer
 
+        :index:
+            index of key for signing data
+
         :return:
             Trasaction object.
         """
@@ -220,7 +223,7 @@ class Account:
         print(f"Account balance: {self.get_balance}")
 
     def payment_op_for_property(
-        self, prop_id: bytes, buyer: "Account", amount: int | float
+        self, prop_id: bytes, buyer: "Account", amount: int|float | float, index: int
     ) -> None:
         """
         a function that allows to create a payment operation on behalf of this account to the recipient.
@@ -234,15 +237,19 @@ class Account:
         :amount:
             the transfer amount which must be equal to property's worth.
 
+        :index:
+            index of key for signing data
+
         :return:
             Trasaction object.
         """
         # Create operation for and seller
-        seller_op: Operation = OP.create_operation(self, buyer, prop_id)
+        sig: bytes = self.sign_data(prop_id, index)
+        seller_op: Operation = OP.create_operation(self, buyer, prop_id, sig)
 
-        if seller_op.verify_operation(prop=True): # verify property of interest
+        if seller_op.verify_operation(index, True): # verify property of interest
             # Initiate coin transaction
-            self.create_payment_op(buyer, self, amount)
+            buyer.create_payment_op(self, amount, index)
             # Update buyer's properties
             buyer.update_properties
             # Update seller's properties
@@ -470,5 +477,6 @@ if __name__ == "__main__":
     sender.payment_op_for_property(
         b"5330464b535546455479394d5430394551564a4a515573764e546335",
         receiver,
-        cost
+        cost,
+        1
     )
