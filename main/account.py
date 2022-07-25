@@ -257,16 +257,16 @@ class Account:
             a digital deed that uniquely identifies a property.
 
         :buyer:
-            Account object as input to which the property ownership will be transfered.
+            account object as input to which the property ownership will be transfered.
 
         :amount:
-            the transfer amount which must be equal to property's worth.
+            property's worth.
 
         :index:
             index of key for signing data
 
         :return:
-            Trasaction object.
+            trasaction object.
         """
         # Create operation for and seller
         sig: bytes = self.sign_data(prop_id, index)
