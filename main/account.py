@@ -5,10 +5,10 @@ import json
 import struct
 import numpy as np
 from typing import Any
-from binascii import hexlify, unhexlify
-from base64 import b64encode, b64decode
-from hashlib import sha256
 from pprint import pprint
+from hashlib import sha256
+from base64 import b64encode, b64decode
+from binascii import hexlify, unhexlify
 from dataclasses import dataclass, field, asdict
 
 # ? Third Party
@@ -20,13 +20,13 @@ from signature import Signature
 from operation import Operation
 from transaction import Transaction
 
-# ? Class Initialization
+# Class Initialization
 KEYS = KeyPair()
 SIGNER: "Signature" = Signature()
 OP: "Operation" = Operation()
 TX: "Transaction" = Transaction()
 
-# ? Random Integer 4bytes
+# Random Integer 4bytes
 RANDNONCE: int = int.from_bytes(os.urandom(4), sys.byteorder)
 
 
@@ -189,27 +189,6 @@ class Account:
             return unspent - spent
         return 0
 
-    def __compute_utxos_stxos(self, coin: str) -> int:
-        """function calculate and returns available coin that can spent"""
-
-        tx: int = 0
-        if coin == "UTXO":  # Calculate Unspent
-            unspent: list = list(self.get_history["UTXO"])
-
-            for u in range(len(unspent)):
-                if unspent[u] is not None:
-                    tx += unspent[u][0]["operation"][0]["asset"]
-
-        elif coin == "STXO":  # Calculate Spent
-            spent: list = list(self.get_history["STXO"])
-
-            for s in range(len(spent)):
-                if spent[s] is not None:
-                    tx += spent[s][0]["operation"][0]["asset"]
-        else:
-            raise BaseException(f"Invalid coin {coin}!")
-        return tx
-
     @get_balance.getter
     def print_balance(self) -> None:
         """
@@ -235,20 +214,32 @@ class Account:
 
         :owner:
             account_id of the current owner
-        """
-
+        """        
         property_: dict[bytes, dict[str, bytes]] = {
-            hexlify(b64encode(deed_no)): {
-                "appro_area": hexlify(b64encode(appro_area)),
-                "worth": hexlify(b64encode(worth)),
+            hexlify(b64encode(deed_no)).decode("ascii"): {
+                "appro_area": hexlify(b64encode(appro_area)).decode("ascii"),
+                "worth": hexlify(b64encode(worth)).decode("ascii"),
                 "owner": self.get_account_id,
             }
         }
 
-        self.update_properties = property_
+        self.update_properties = property_ # Update Properties
+        # Statically create a transaction for the new property
+        operation = [
+            {
+                "asset": hexlify(b64encode(deed_no)).decode("ascii"),
+                "receiver": self.get_account_id,
+                "sender": None,
+                "sig": None,
+            }
+        ]
+
+        tx: Transaction = TX.create_operation(operation, RANDNONCE)
+        # self.__update_tx_history(tx)
+
 
     def payment_op_for_property(
-        self, prop_id: bytes, buyer: "Account", amount: int | float | float, index: int
+        self, prop_id: str, buyer: "Account", amount: int | float | float, index: int
     ) -> None:
         """
         a function that allows to create a payment operation on behalf of this account to the recipient.
@@ -269,21 +260,24 @@ class Account:
             trasaction object.
         """
         # Create operation for and seller
-        sig: bytes = self.sign_data(prop_id, index)
+        sig: bytes = self.sign_data(prop_id.encode("ascii"), index)
         seller_op: Operation = OP.create_operation(self, buyer, prop_id, sig)
 
         if seller_op.verify_operation(index, True):  # verify property of interest exist
-            # Initiate coin transaction
+            # Initiate coin payment operation
             buyer.create_payment_op(self, amount, index)
+            # if payment operation was a success remove and update seller properties
+            temp = {prop_id: self.get_properties.pop(prop_id)}
+            # change property owner
+            temp[prop_id]["owner"] = buyer.get_account_id
             # Update buyer's properties
-            # buyer.update_properties
-            # Update seller's properties
-            # self.update_properties
-            # print(self.get_properties)
-            tx: Transaction = TX.create_operation(seller_op.get_operation_list, RANDNONCE)
-            # pprint(tx.get_trasaction_list)
+            buyer.update_properties = temp
 
-        # TODO: WORK ON PROGRESS!!
+            tx: Transaction = TX.create_operation(
+                seller_op.get_operation_list, RANDNONCE
+            )
+            # self.__update_tx_history(tx)
+            # buyer.__update_tx_history(tx)
 
     @property
     def get_properties(self):
@@ -346,6 +340,31 @@ class Account:
     def get_history(self):
         """function return an array of history or transaction"""
         return self.__tx_history
+
+    def __compute_utxos_stxos(self, coin: str) -> int:
+        """function calculate and returns available coin that can spent"""
+
+        tx: int = 0
+        if coin == "UTXO":  # Calculate Unspent
+            unspent: list = list(self.get_history["UTXO"])
+
+            for u in range(len(unspent)):
+                if unspent[u] is not None:
+                    temp = unspent[u][0]["operation"][0]["asset"]
+                    if not isinstance(temp, str):
+                        tx += temp
+
+        elif coin == "STXO":  # Calculate Spent
+            spent: list = list(self.get_history["STXO"])
+
+            for s in range(len(spent)):
+                if spent[s] is not None:
+                    temp = spent[s][0]["operation"][0]["asset"]
+                    if not isinstance(temp, str):
+                        tx += temp
+        else:
+            raise BaseException(f"Invalid coin {coin}!")
+        return tx
 
     def __update_tx_history(self, tx: Transaction):
         """Function keeps record of transactions for account"""
@@ -432,24 +451,27 @@ if __name__ == "__main__":
     # receiver.create_payment_op(sender, 10, 1)
     # receiver.create_payment_op(sender, 5, 1)
     # print(sender.get_balance)
-    sender.print_tx_history("UTXO")
-    sender.print_tx_history("STXO")
+    cost = int(b64decode(unhexlify("4d5441774d4441774d413d3d")))
+
+    sender.payment_op_for_property(
+        "5330464b535546455479394d5430394551564a4a515573764e546335", receiver, cost, 1
+    )
+    # sender.print_tx_history("UTXO")
+    # sender.print_tx_history("STXO")
     # sender.print_tx_history()
     # print()
     # receiver.print_tx_history("UTXO")
+    # print()
     # receiver.print_tx_history("STXO")
     # receiver.print_tx_history()
     # print(sender.get_account_id)
     # print(receiver.get_account_id)
     # print(sender.get_history)
+    # print(receiver.get_history)
     # print(sender.get_account_id)
-    print(sender.get_balance)
+    # print(sender.get_balance)
     # print(receiver.get_balance)
     # print(sender.get_properties)
     # sender.print_properties
-    cost = int(b64decode(unhexlify(b"4d5441774d4441774d413d3d")))
-
-    sender.payment_op_for_property(
-        b"5330464b535546455479394d5430394551564a4a515573764e546335", receiver, cost, 1
-    )
-    # sender.print_properties
+    # print()
+    # receiver.print_properties

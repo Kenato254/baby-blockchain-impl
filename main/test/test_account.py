@@ -15,7 +15,7 @@ class AccountTest(unittest.TestCase):
         self.user2 = user2.gen_account()
         self.user2.add_key_pair_to_wallet(KeyPair())
 
-    def test_initial_50000_coins(self):
+    def test_initial_5000000_coins(self):
         self.assertEqual(self.user1.get_balance, 5000000.0)
         self.assertEqual(self.user2.get_balance, 5000000.0)
     

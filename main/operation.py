@@ -87,7 +87,7 @@ class Operation:
             self.sender.get_account_id,
         )
         script: object = None
-
+        print(self.asset)
         if prop and self.sender.get_properties.get(self.asset, False): # Property exist check
             script:object = Script(op_codes, self.asset)
             return script.eval()
