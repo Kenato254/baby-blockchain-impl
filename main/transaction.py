@@ -94,15 +94,17 @@ if __name__ == "__main__":
 
     # ? Operation
     op = Operation()
-    operation = op.create_operation(acc_sender, acc_receiver, 100)
+    operation = op.create_operation(acc_sender, acc_receiver, 100, b"")
 
-    if operation.verify_operation():
+    if operation.verify_operation(index=1):
         sender_op = operation.get_operation_list
         temp = Transaction()
 
         tx = temp.create_operation(sender_op, RANDNONCE)
-        print(tx.to_string())
+        # print(tx.to_string())
+        # print(tx.transaction_id)
         # print(tx.get_trasaction_list)
+        print("What!")
         # print(tx.transaction_id)
         # print(tx.nonce)
         # operation.print_operation()

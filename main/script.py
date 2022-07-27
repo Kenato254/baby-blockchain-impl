@@ -121,7 +121,7 @@ class Script:
         elif isinstance(amt, bytes):
             self.amt = amt
         else:
-            raise BaseException("Invalid {amt} input!")
+            raise BaseException(f"Invalid {amt} input!")
 
     def push(self, data) -> None:
         """
