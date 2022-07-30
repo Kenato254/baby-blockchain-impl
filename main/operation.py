@@ -1,7 +1,7 @@
 import json
-from dataclasses import dataclass
 from pprint import pprint
 from base64 import b64encode
+from dataclasses import dataclass
 
 from script import Script
 
@@ -36,7 +36,11 @@ class Operation:
         return cls(s, r, a, sig)
 
     def create_operation(
-        self, sender: object, recpt: object, asset: int | float | str | bytes, sig: bytes
+        self,
+        sender: object,
+        recpt: object,
+        asset: int | float | str | bytes,
+        sig: bytes,
     ) -> "Operation":
         """
         a function that allows to create an operation with all the necessary details and signature.
@@ -87,12 +91,14 @@ class Operation:
             self.sender.get_account_id,
         )
         script: object = None
-        if prop and self.sender.get_properties.get(self.asset, False): # Property exist check
-            script:object = Script(op_codes, self.asset)
+        if prop and self.sender.get_properties.get(
+            self.asset, False
+        ):  # Property exist check
+            script: object = Script(op_codes, self.asset)
             return script.eval()
 
-        if self.asset < self.sender.get_balance: # Coins are sufficient check
-            script:object = Script(op_codes, self.asset)
+        if self.asset < self.sender.get_balance:  # Coins are sufficient check
+            script: object = Script(op_codes, self.asset)
             return script.eval()
         return False
 
@@ -133,7 +139,7 @@ if __name__ == "__main__":
     sender = Account()
     acc_sender = sender.gen_account()
     acc_sender.add_key_pair_to_wallet(KeyPair())
-    
+
     receiver = Account()
     acc_receiver = sender.gen_account()
     acc_receiver.add_key_pair_to_wallet(KeyPair())

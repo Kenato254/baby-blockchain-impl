@@ -1,11 +1,12 @@
+# Built-in
 import sys
 import base64
-import pyasn1.codec.der.encoder
 import pyasn1.type.univ
 from hashlib import sha512
+import pyasn1.codec.der.encoder
 from dataclasses import dataclass, field
 
-# ? Local Imports
+# Local Imports
 from keypair import KeyPair
 
 GETKEYPAIR = KeyPair(1024)
@@ -13,10 +14,11 @@ GETKEYPAIR = KeyPair(1024)
 
 @dataclass
 class Signature:
-    """ Not completely implemented as per PKCS Specifications.
-        This for learning purposes. Can be updated to meet RFC3447 specs
-        https://datatracker.ietf.org/doc/html/rfc3447#page-27
+    """Not completely implemented as per PKCS Specifications.
+    This for learning purposes. Can be updated to meet RFC3447 specs
+    https://datatracker.ietf.org/doc/html/rfc3447#page-27
     """
+
     __signature: bytes = b""
 
     @property
@@ -24,11 +26,10 @@ class Signature:
         return self.__signature
 
     def sign_data(self, kPr: tuple[int, int], msg: bytes) -> bytes:
-        """ Computes Digital Signature of a given message
-        """
+        """Computes Digital Signature of a given message"""
         d, n = kPr  # Unpack Private Key
         msg_hash = int.from_bytes(sha512(msg).digest(), sys.byteorder)
-        temp = pow(msg_hash, d, n)  
+        temp = pow(msg_hash, d, n)
         self.__signature = temp.to_bytes(temp.bit_length(), sys.byteorder)
         return self.__signature
 
@@ -50,6 +51,7 @@ class Signature:
 
     def print_signature(self, **kwargs) -> None:
         print(self.to_string(**kwargs))
+
 
 if __name__ == "__main__":
     signer = Signature()

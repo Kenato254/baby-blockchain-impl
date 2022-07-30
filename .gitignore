@@ -9,6 +9,7 @@ C_Python
 private-key.pem
 publickey.pem
 img/real-blockchain.png:Zone.Identifier
+acc.py
 
 # Distribution / packaging
 .Python

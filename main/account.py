@@ -27,59 +27,51 @@ OP: "Operation" = Operation()
 TX: "Transaction" = Transaction()
 
 # Random Integer 4bytes
-RANDNONCE: int = int.from_bytes(os.urandom(4), sys.byteorder)
+RANDNONCE: int = int.from_bytes
 
 
 @dataclass(repr=False)
 class Account:
     """
+    :test_coins:
+        an integer representing test coins
+
     :account_id:
         an unique value for identifying an account within the system.
         It can often be a public key or its hash value.
 
-    wallet:
+    :wallet:
         an array that stores KeyPair objects that belong to the same account.
 
-    balance:
-        an integer value representing the number of coins belongs to the account.
+    :properties:
+        a dictonary containing properties own by the accountt
+
+    :tx_history:
+        a numpy array value representing unspent and spent transaction outputs.
 
     """
 
-    __account_id: bytes = b""
+    _account_id: bytes = b""
+
     wallet: NDArray[
         Shape["1,0"],
         Structure["PrivateKey: Object, PublicKey: Object, Modulus: Object"],
-    ] | None = None
+    ] = field(default_factory=lambda: np.empty([1, 0], dtype="O"))
 
-    __properties: dict = None
-
-    __tx_history: NDArray[
+    _properties: dict = field(default_factory=lambda: dict())
+    _tx_history: NDArray[
         Shape["2,2"], Structure["UTXO: Object, STXO: Object"]
-    ] | None = field(default=None, init=False)
-
-    def __post_init__(self) -> None:
-        """Sets first UTXO: Statically for test purposes"""
-
-        temp_utxo = [
-            {
-                "sender": None,
-                "receiver": self.get_account_id,  # id from firstly generated keys
-                "asset": 5000000.00,
-                "sig": None,
-            }
-        ]
-        tx = TX.create_operation(temp_utxo, RANDNONCE)
-        self.__update_tx_history(tx)
+    ] | None = None
 
     @property
     def get_account_id(self) -> bytes:
         """Returns account's id"""
-        return self.__account_id
+        return self._account_id
 
     @classmethod
-    def __create_account(cls, id, wall) -> "Account":
+    def __create_account(cls, id, wall, property, tx_history) -> "Account":
         """Return a new object of Account"""
-        return cls(id, wall)
+        return cls(id, wall, property, tx_history)
 
     def gen_account(self) -> "Account":
         """
@@ -97,7 +89,7 @@ class Account:
             [("PrivateKey", "O"), ("PublicKey", "O"), ("Modulus", "O")]
         )
         wallet = np.array([(kPrv[0], kPub[1], kPub[0])], dtype=data_struct)
-        return self.__create_account(acc_id, wallet)
+        return self.__create_account(acc_id, wallet, self.get_properties, self._tx_history)
 
     def add_key_pair_to_wallet(self, keypair: KeyPair) -> None:
         """
@@ -116,14 +108,14 @@ class Account:
             [("PrivateKey", "O"), ("PublicKey", "O"), ("Modulus", "O")]
         )
         #  Updates account id with the new publickey
-        self.__account_id = sha256(str(kPub).encode("ascii")).hexdigest()
+        self._account_id = sha256(str(kPub).encode("ascii")).hexdigest()
 
         temp = np.array([(kPrv[0], kPub[1], kPub[0])], dtype=data_struct)
         self.wallet = np.append(self.wallet, temp)  # Add new keys to the wallet
 
     def create_payment_op(
         self, recipient: "Account", asset: int | float | str | bytes, index: int
-    ) -> None:
+    ) -> Transaction:
         """
         a function that allows to create a payment operation on behalf of this account to the recipient.
 
@@ -163,17 +155,17 @@ class Account:
         if operation.verify_operation(index):
             op: list[Operation] = operation.get_operation_list
             transaction = TX.create_operation(
-                op, RANDNONCE
+                op, RANDNONCE(os.urandom(4), sys.byteorder)
             )  # If operation is genuine create transaction
 
             # Update both sender and receiver's transaction history
-            self.__update_tx_history(transaction)
-            recipient.__update_tx_history(transaction)
+            self._update_tx_history(transaction)
+            recipient._update_tx_history(transaction)
+            return transaction
 
-        else:
-            raise BaseException(
-                f"Transfer of {asset} to {recipient.get_account_id} from {self.get_account_id} failed!!"
-            )
+        raise BaseException(
+            f"Transfer of {asset} to {recipient.get_account_id} from {self.get_account_id} failed!!"
+        )
 
     @property
     def get_balance(self) -> int | float:
@@ -214,7 +206,7 @@ class Account:
 
         :owner:
             account_id of the current owner
-        """        
+        """
         property_: dict[bytes, dict[str, bytes]] = {
             hexlify(b64encode(deed_no)).decode("ascii"): {
                 "appro_area": hexlify(b64encode(appro_area)).decode("ascii"),
@@ -223,7 +215,7 @@ class Account:
             }
         }
 
-        self.update_properties = property_ # Update Properties
+        self.update_properties = property_  # Update Properties
         # Statically create a transaction for the new property
         operation = [
             {
@@ -234,13 +226,14 @@ class Account:
             }
         ]
 
-        tx: Transaction = TX.create_operation(operation, RANDNONCE)
-        # self.__update_tx_history(tx)
-
+        tx: Transaction = TX.create_operation(
+            operation, RANDNONCE(os.urandom(4), sys.byteorder)
+        )
+        # self._update_tx_history(tx)
 
     def payment_op_for_property(
         self, prop_id: str, buyer: "Account", amount: int | float | float, index: int
-    ) -> None:
+    ) -> Transaction:
         """
         a function that allows to create a payment operation on behalf of this account to the recipient.
 
@@ -273,11 +266,16 @@ class Account:
             # Update buyer's properties
             buyer.update_properties = temp
 
-            tx: Transaction = TX.create_operation(
-                seller_op.get_operation_list, RANDNONCE
+            transaction: Transaction = TX.create_operation(
+                seller_op.get_operation_list, RANDNONCE(os.urandom(4), sys.byteorder)
             )
-            # self.__update_tx_history(tx)
-            # buyer.__update_tx_history(tx)
+            # self.__update_transaction_history(transaction)
+            # buyer.__update_transaction_history(transaction)
+            return transaction
+
+        raise BaseException(
+            f"Transfer of {prop_id} to {buyer.get_account_id} from {self.get_account_id} failed!!"
+        )
 
     @property
     def get_properties(self):
@@ -287,7 +285,7 @@ class Account:
         :return:
             None
         """
-        return self.__properties
+        return self._properties
 
     @get_properties.setter
     def update_properties(self, property_: dict[bytes, dict[str, bytes]]) -> None:
@@ -300,10 +298,10 @@ class Account:
         :return:
             None
         """
-        if self.__properties is None:
-            self.__properties = property_
+        if self._properties is None:
+            self._properties = property_
         else:
-            self.__properties.update(property_)
+            self._properties.update(property_)
 
     @get_properties.getter
     def print_properties(self) -> None:
@@ -339,7 +337,7 @@ class Account:
     @property
     def get_history(self):
         """function return an array of history or transaction"""
-        return self.__tx_history
+        return self._tx_history
 
     def __compute_utxos_stxos(self, coin: str) -> int:
         """function calculate and returns available coin that can spent"""
@@ -366,7 +364,7 @@ class Account:
             raise BaseException(f"Invalid coin {coin}!")
         return tx
 
-    def __update_tx_history(self, tx: Transaction):
+    def _update_tx_history(self, tx: Transaction):
         """Function keeps record of transactions for account"""
 
         data_struct = np.dtype([("UTXO", "O"), ("STXO", "O")])
@@ -378,10 +376,11 @@ class Account:
         if tx.get_trasaction_list[0]["operation"][0]["receiver"] == self.get_account_id:
             temp_tx = np.array([(tx.get_trasaction_list, None)], dtype=data_struct)
 
-        if self.__tx_history is not None:
-            self.__tx_history = np.append(self.__tx_history, temp_tx)
+        if self._tx_history is not None:
+            self._tx_history = np.append(self._tx_history, temp_tx)
         else:
-            self.__tx_history = temp_tx
+            self._tx_history = temp_tx
+        # print(self._tx_history)
 
     def print_tx_history(self, tx: str | None = None) -> None:
         """
@@ -406,6 +405,7 @@ class Account:
             print(f"UTXO: {json.dumps(temp, indent=2)}", end="\n")
             print(f"STXO: {json.dumps(temp2, indent=2)}", end="\n")
 
+
     def to_string(self) -> str:
         """
         a function that allows to form a string with an account object.
@@ -413,7 +413,7 @@ class Account:
         :return:
             an object of the String class.
         """
-        return f"account_id: {self.get_account_id!r}\nproperties: {self.__properties!r}\nbalance: {self.get_balance!r}"
+        return f"account_id: {self.get_account_id!r}\nproperties: {self._properties!r}\nbalance: {self.get_balance!r}"
 
     def print(self) -> None:
         """
@@ -424,13 +424,71 @@ class Account:
         """
         pprint(self.wallet)
 
+class SpecialAccount(Account):
+    """
+    :test_coins:
+        an integer representing test coins
+
+    :account_id:
+        an unique value for identifying an account within the system.
+        It can often be a public key or its hash value.
+
+    :wallet:
+        an array that stores KeyPair objects that belong to the same account.
+
+    :properties:
+        a dictonary containing properties own by the accountt
+
+    :tx_history:
+        a numpy array value representing unspent and spent transaction outputs.
+
+    """
+
+    def __init__(
+        self,
+        _account_id: bytes = b"",
+        wallet: NDArray[
+            Shape["1,0"],
+            Structure["PrivateKey: Object, PublicKey: Object, Modulus: Object"],
+        ] = np.empty([1, 0], dtype="O"),
+        _properties: dict = dict(),
+        _tx_history: NDArray[Shape["2,2"], Structure["UTXO: Object, STXO: Object"]]
+        | None = None,
+        test_coins: int = 0,
+    ) -> None:
+    
+        super().__init__(_account_id, wallet, _properties, _tx_history)
+        self.test_coins = test_coins
+
+
+    def gen_account(self) -> "Account":
+        obj = super().gen_account()
+        """Sets first UTXO: Statically for test purposes"""
+        temp_utxo = [
+            {
+                "sender": None,
+                "receiver": obj.get_account_id,  
+                "asset": self.test_coins,
+                "sig": None,
+            }
+        ]
+        tx = TX.create_operation(temp_utxo, RANDNONCE(os.urandom(4), sys.byteorder))
+        obj._update_tx_history(tx)
+        obj.test_coins = self.test_coins
+        return obj
+
 
 if __name__ == "__main__":
-    account1 = Account()
+    account1 = SpecialAccount(test_coins=50000)
     sender = account1.gen_account()
+    # print(sender.get_account_id)
     sender.add_key_pair_to_wallet(KeyPair())
     # print(sender.get_account_id)
-
+    # print(sender.get_balance, "balance")
+    # sender.print_tx_history("UTXO")
+    # sender.print_tx_history("STXO")
+    # sender.print_tx_history()
+    # exit()
     #! https://upload.wikimedia.org/wikipedia/commons/8/80/Example_of_a_blank_Kenyan_Deed_Title.png
     sender.create_property(b"KAJIADO/LOODARIAK/579", b"104.0 hectares", b"1000")
     sender.create_property(b"KAJIADO/LOODARIAK/580", b"80.0 hectares", b"800")
@@ -444,18 +502,18 @@ if __name__ == "__main__":
     receiver = account2.gen_account()
     receiver.add_key_pair_to_wallet(KeyPair())
     # receiver.add_key_pair_to_wallet(KeyPair())
-    sender.create_payment_op(receiver, 900000, 1)
+    # sender.create_payment_op(receiver, 9000, 1)
     # sender.create_payment_op(receiver, 40.99, 1)
     # sender.create_payment_op(receiver, 20, 1)
     # sender.create_payment_op(receiver, 60, 1)
     # receiver.create_payment_op(sender, 10, 1)
     # receiver.create_payment_op(sender, 5, 1)
     # print(sender.get_balance)
-    cost = int(b64decode(unhexlify("4d5441774d4441774d413d3d")))
+    # cost = int(b64decode(unhexlify("4d5441774d413d3d")))
 
-    sender.payment_op_for_property(
-        "5330464b535546455479394d5430394551564a4a515573764e546335", receiver, cost, 1
-    )
+    # sender.payment_op_for_property(
+    #     "5330464b535546455479394d5430394551564a4a515573764e546335", receiver, cost, 1
+    # )
     # sender.print_tx_history("UTXO")
     # sender.print_tx_history("STXO")
     # sender.print_tx_history()
@@ -463,7 +521,7 @@ if __name__ == "__main__":
     # receiver.print_tx_history("UTXO")
     # print()
     # receiver.print_tx_history("STXO")
-    # receiver.print_tx_history()
+    # receiver.print_tx_history() 
     # print(sender.get_account_id)
     # print(receiver.get_account_id)
     # print(sender.get_history)

@@ -70,7 +70,7 @@ class Transaction:
     def get_trasaction_list(self) -> list[dict]:
         return [
             {
-                "trasaction_id": self.transaction_id,
+                "transaction_id": self.transaction_id,
                 "operation": self.set_of_operations,
                 "nonce": self.nonce,
             }

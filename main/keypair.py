@@ -22,13 +22,15 @@ PublicExponent = NewType("PublicExponent", int)
 Modulus = NewType("Modulus", int)
 
 
-@dataclass
+@dataclass(repr=False)
 class KeyPair:
     """Simple RSA Algorithim to Compute KeyPair"""
 
-    __private_key: tuple[PrivateExponent, Modulus] | None = None
-    __large_primes: tuple[Prime1, Prime2] | None = None
-    public_key: tuple[Modulus, PublicExponent] | None = None
+    __private_key: tuple[PrivateExponent, Modulus] = field(
+        default_factory=lambda: tuple()
+    )
+    __large_primes: tuple[Prime1, Prime2] = field(default_factory=lambda: tuple())
+    public_key: tuple[Modulus, PublicExponent] = field(default_factory=lambda: tuple())
     key_bytes: Optional[int] = field(default=1024)
 
     @classmethod

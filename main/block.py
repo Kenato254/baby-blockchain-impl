@@ -1,6 +1,6 @@
 import json
 from hashlib import sha256
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 
 @dataclass(repr=False)
@@ -18,12 +18,12 @@ class Block:
 
     block_id: str = ""
     prev_hash: str = ""
-    transactions: list | None = None
+    transactions: list = field(default_factory=lambda: list())
 
     @classmethod
     def __create_block_helper(cls, prev_hash: str, transactions: list) -> "Block":
         """Helper function returns an new object of Block"""
-        block_id = cls(prev_hash, transactions).eval()
+        block_id = cls("", prev_hash, transactions).eval()
         return cls(block_id, prev_hash, transactions)
 
     def create_block(self, prev_hash: str, transactions: list) -> "Block":
@@ -61,7 +61,7 @@ class Block:
                 "transactions": self.transactions,
             }
         ]
-        return json.dumps(block, indent=2)
+        return json.dumps(block)
 
     def print_block_object(self) -> None:
         """
