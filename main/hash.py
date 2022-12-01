@@ -12,11 +12,3 @@ class SHA1:
             string input
         """
         return sha1(string).hexdigest()
-
-
-
-if __name__ == "__main__":
-    h = SHA1()
-    print(h.toSHA1(b"hello world"))
-    print(h.toSHA1(b"hello world0"))
-    print(h.toSHA1(b"hello world9999"))
