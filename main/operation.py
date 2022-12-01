@@ -130,35 +130,3 @@ class Operation:
                 "sig": self.signature.hex().strip("0"),
             }
         ]
-
-
-if __name__ == "__main__":
-    from keypair import KeyPair
-    from account import Account
-
-    sender = Account()
-    acc_sender = sender.gen_account()
-    acc_sender.add_key_pair_to_wallet(KeyPair())
-
-    receiver = Account()
-    acc_receiver = sender.gen_account()
-    acc_receiver.add_key_pair_to_wallet(KeyPair())
-
-    # print(acc_sender.to_string())
-    # print(acc_receiver.to_string())
-    # acc_sender.print()
-    # acc_receiver.print()
-
-    op = Operation()
-    # operation = op.create_operation(acc_sender, acc_receiver, 100)
-    # print(operation, sep="\n")
-    # pprint(operation.sender)
-    # pprint(operation.receiver)
-    # pprint(operation.asset)
-    # pprint(operation.signature)
-    # operation.print_operation()
-    # print(operation.verify_operation())
-    # print(operation.to_string())
-    # pprint(operation.get_operation_list)
-    # operation.print_operation()
-    ...
