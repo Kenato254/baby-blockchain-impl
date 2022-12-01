@@ -180,7 +180,3 @@ class Script:
                     temp = op.encode("ascii")
                 self.push(DataNode(temp))
         return False
-
-
-if __name__ == "__main__":
-    script = Script
