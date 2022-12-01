@@ -51,13 +51,3 @@ class Signature:
 
     def print_signature(self, **kwargs) -> None:
         print(self.to_string(**kwargs))
-
-
-if __name__ == "__main__":
-    signer = Signature()
-    msg: bytes = b"Blockchain-Developer-Classes/baby-blockchain/baby-blockchain-impl/"
-
-    privateKey, publicKey = GETKEYPAIR.gen_key_pair().values()
-    signed_msg = signer.sign_data(privateKey, msg)
-    print(signer.verify_signature(msg, signed_msg, publicKey))
-    signer.print_signature(format="PEM")
