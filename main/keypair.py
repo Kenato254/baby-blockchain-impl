@@ -191,24 +191,3 @@ class KeyPair:
             )
         else:
             print(self.to_string(**kwargs))
-
-
-if __name__ == "__main__":
-    keypair = KeyPair(1024)
-    pr, pub = keypair.gen_key_pair().values()
-    # keypair.print_key_pair(key="Public", format="PEM")
-    # keypair.print_key_pair()
-    # print(f"{keypair.get_primes =}")
-    # print("\n\n")
-    new_keys = keypair.gen_key_pair(e=pr[0])
-    # print(f"{keypair.get_primes =}")
-    # print("\n\n")
-    # pprint(new_keys)
-    # print(keypair.key_bytes)
-    keypair2 = keypair.from_existing(
-        new_keys["Kpr"],
-        keypair.get_primes,
-        new_keys["Kpub"],
-        keypair.key_bytes,
-    )
-    keypair2.print_key_pair(key="Private", format="PEM")
