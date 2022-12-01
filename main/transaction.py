@@ -75,36 +75,3 @@ class Transaction:
                 "nonce": self.nonce,
             }
         ]
-
-
-if __name__ == "__main__":
-    from keypair import KeyPair
-    from account import Account
-    from operation import Operation
-
-    # ? User1
-    sender = Account()
-    acc_sender = sender.gen_account()
-    acc_sender.add_key_pair_to_wallet(KeyPair())
-
-    # ? User2
-    receiver = Account()
-    acc_receiver = receiver.gen_account()
-    acc_receiver.add_key_pair_to_wallet(KeyPair())
-
-    # ? Operation
-    op = Operation()
-    operation = op.create_operation(acc_sender, acc_receiver, 100, b"")
-
-    if operation.verify_operation(index=1):
-        sender_op = operation.get_operation_list
-        temp = Transaction()
-
-        tx = temp.create_operation(sender_op, RANDNONCE)
-        # print(tx.to_string())
-        # print(tx.transaction_id)
-        # print(tx.get_trasaction_list)
-        print("What!")
-        # print(tx.transaction_id)
-        # print(tx.nonce)
-        # operation.print_operation()
